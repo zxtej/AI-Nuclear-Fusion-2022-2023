@@ -2,52 +2,11 @@
 This contains the main loop for the program. Most of the initialization occurs here, and time steps are iterated through.
 For settings (as to what to calculate, eg. E / B field, E / B force) go to the defines in include/traj.h
 */
-#include <complex>
 #include "include/traj.h"
-#include <fftw3.h>
 // sphere
-int n_part[3] = {n_parte, n_partd, n_parte + n_partd}; // 0,number of "super" electrons, electron +deuteriom ions, total
-unsigned int n_space_div[3] = {n_space_divx, n_space_divy, n_space_divz};
-unsigned int n_space_div2[3] = {n_space_divx2, n_space_divy2, n_space_divz2};
-
-void log_headers()
-{
-    logger.write("time_large");
-    logger.write("time_small");
-    logger.write("dtchanged");
-    logger.write("ncalc_ele");
-    logger.write("ncalc_deut");
-    logger.write("dt_ele");
-    logger.write("dt_deut");
-    logger.write("t_sim");
-    logger.write("ne");
-    logger.write("ni");
-    logger.write("KEtot_ele");
-    logger.write("KEtot_deut");
-    logger.write("Ele_pot");
-    logger.write("Mag_pot");
-    logger.write("E_tot");
-    logger.newline();
-}
-void log_entry(int i_time, int ntime, int cdt, int total_ncalc[2], float dt[2], double t, int nt[2], float KEtot[2], float U[2])
-{
-    logger.write(i_time);
-    logger.write(ntime);
-    logger.write(cdt);
-    logger.write(total_ncalc[0]);
-    logger.write(total_ncalc[1]);
-    logger.write(dt[0]);
-    logger.write(dt[1]);
-    logger.write(t);
-    logger.write(nt[0]);
-    logger.write(nt[1]);
-    logger.write(KEtot[0]);
-    logger.write(KEtot[1]);
-    logger.write(U[0]);
-    logger.write(U[1]);
-    logger.write(KEtot[0] + KEtot[1] + U[0] + U[1]);
-    logger.newline();
-}
+ int n_part[3] = {n_parte, n_partd, n_parte + n_partd}; // 0,number of "super" electrons, electron +deuteriom ions, total
+ unsigned int n_space_div[3] = {n_space_divx, n_space_divy, n_space_divz};
+ unsigned int n_space_div2[3] = {n_space_divx2, n_space_divy2, n_space_divz2};
 int main()
 {
     // Fast printing
@@ -160,7 +119,7 @@ int main()
     // set time step to allow electrons to gyrate if there is B field or to allow electrons to move slowly throughout the plasma distance
 
     float dt[2];
-    dt[0] = 4 * min(min(min(TDebye, min(Tv / ncalc[0], Tcyclotron) / 4), plasma_period / ncalc[0] / 4), TE / ncalc[0]) / 2; // electron should not move more than 1 cell after ncalc*dt and should not make more than 1/4 gyration and must calculate E before the next 1/4 plasma period
+    dt[0] = 40 * min(min(min(TDebye, min(Tv / ncalc[0], Tcyclotron) / 4), plasma_period / ncalc[0] / 4), TE / ncalc[0]) / 2; // electron should not move more than 1 cell after ncalc*dt and should not make more than 1/4 gyration and must calculate E before the next 1/4 plasma period
     // dt[0] /= 2.f;
     // Bmax *= 2;
     // Emax *= 4;
@@ -418,3 +377,4 @@ int main()
     logger.close();
     return 0;
 }
+

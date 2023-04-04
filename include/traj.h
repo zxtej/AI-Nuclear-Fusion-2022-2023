@@ -29,6 +29,10 @@
 #include <vtk/vtkXMLPolyDataWriter.h>
 #include <vtk/vtkImageData.h>
 #include <vtk/vtkPointData.h>
+#include <complex>
+
+#include <fftw3.h>
+
 using namespace std;
 extern cl::Context context_g;
 extern cl::Device default_device_g;
@@ -75,6 +79,8 @@ public:
 };
 static Time timer;
 static Log logger;
+void log_entry(int i_time, int ntime, int cdt, int total_ncalc[2], float dt[2], double t, int nt[2], float KEtot[2], float U[2]);
+void log_headers();
 void save_vti_c2(string filename, int i,
                  unsigned int n_space_div[3], float posl[3], float dd[3], uint64_t num, int ncomponents, double t,
                  float data1[3][n_space_divz2][n_space_divy2][n_space_divz2], string typeofdata, int bytesperdata);

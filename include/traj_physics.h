@@ -10,7 +10,7 @@
 #define printB // print out B field
 #define printE // print out E field
 // #define FileIn //whether to load from input file (unused)
-#define RamDisk // whether to use RamDisk
+//#define RamDisk // whether to use RamDisk
 #define maxcells 32
 #define cldevice 0
 
@@ -22,7 +22,7 @@
 
 constexpr float a0 = 2e-3; // typical dimensions of a cell
 // technical parameters
-constexpr int n_space = 128;                              // must be 2 to power of n
+constexpr int n_space = 64;                              // must be 2 to power of n
 constexpr int n_partd = n_space * n_space * n_space * 1; // must be 2 to power of n
 constexpr int n_parte = n_partd;
 constexpr unsigned int ncoeff = 8;
@@ -38,10 +38,10 @@ constexpr int nthreads = 8; // match with your CPU
 
 // The maximum expected E and B fields. If fields go beyond this, the the time step, cell size etc will be wrong. Should adjust and recalculate.
 //  maximum expected magnetic field
-constexpr float Bmax0 = 10;
-constexpr float Emax0 = 1e7;
+constexpr float Bmax0 = 1;
+constexpr float Emax0 = 1e9;
 
-constexpr float target_part = 1e11;
+constexpr float target_part = 1e13;
 constexpr float r_part_spart = target_part / n_partd; // 1e12 / n_partd; // ratio of particles per tracked "super" particle
 // ie. the field of N particles will be multiplied by (1e12/N), as if there were 1e12 particles
 

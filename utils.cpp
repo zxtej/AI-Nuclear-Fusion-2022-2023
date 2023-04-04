@@ -37,3 +37,45 @@ void Log::newline(){
 void Log::close(){
     log_file.close();
 }
+
+
+void log_headers()
+{
+    logger.write("time_large");
+    logger.write("time_small");
+    logger.write("dtchanged");
+    logger.write("ncalc_ele");
+    logger.write("ncalc_deut");
+    logger.write("dt_ele");
+    logger.write("dt_deut");
+    logger.write("t_sim");
+    logger.write("ne");
+    logger.write("ni");
+    logger.write("KEtot_ele");
+    logger.write("KEtot_deut");
+    logger.write("Ele_pot");
+    logger.write("Mag_pot");
+    logger.write("E_tot");
+    logger.newline();
+}
+
+
+void log_entry(int i_time, int ntime, int cdt, int total_ncalc[2], float dt[2], double t, int nt[2], float KEtot[2], float U[2])
+{
+    logger.write(i_time);
+    logger.write(ntime);
+    logger.write(cdt);
+    logger.write(total_ncalc[0]);
+    logger.write(total_ncalc[1]);
+    logger.write(dt[0]);
+    logger.write(dt[1]);
+    logger.write(t);
+    logger.write(nt[0]);
+    logger.write(nt[1]);
+    logger.write(KEtot[0]);
+    logger.write(KEtot[1]);
+    logger.write(U[0]);
+    logger.write(U[1]);
+    logger.write(KEtot[0] + KEtot[1] + U[0] + U[1]);
+    logger.newline();
+}
