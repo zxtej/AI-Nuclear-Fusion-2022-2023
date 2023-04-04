@@ -4,9 +4,10 @@ For settings (as to what to calculate, eg. E / B field, E / B force) go to the d
 */
 #include "include/traj.h"
 // sphere
- int n_part[3] = {n_parte, n_partd, n_parte + n_partd}; // 0,number of "super" electrons, electron +deuteriom ions, total
- unsigned int n_space_div[3] = {n_space_divx, n_space_divy, n_space_divz};
- unsigned int n_space_div2[3] = {n_space_divx2, n_space_divy2, n_space_divz2};
+ int ncalc[2] = {md_me * 1, 1};
+int n_part[3] = {n_parte, n_partd, n_parte + n_partd}; // 0,number of "super" electrons, electron +deuteriom ions, total
+unsigned int n_space_div[3] = {n_space_divx, n_space_divy, n_space_divz};
+unsigned int n_space_div2[3] = {n_space_divx2, n_space_divy2, n_space_divz2};
 int main()
 {
     // Fast printing
@@ -84,105 +85,23 @@ int main()
     cout << "float size=" << sizeof(float) << ", "
          << "int32_t size=" << sizeof(int32_t) << ", "
          << "int size=" << sizeof(int) << endl;
-    int ncalc[2] = {md_me * 1, 1};
+
     int total_ncalc[2] = {0, 0};
     // particle 0 - electron, particle 1 deuteron
-    // set plasma parameters
-    int mp[2] = {1, 1835 * 2};
-    // float mp[2]= {9.10938356e-31,3.3435837724e-27}; //kg
-    int qs[2] = {-1, 1};              // Sign of charge
-    float Temp[2] = {Temp_e, Temp_d}; // in K convert to eV divide by 1.160451812e4
-
-    // initial bulk electron, ion velocity
-    float v0[2][3] = {{0, 0, 0 /*1e6*/}, {0, 0, 0}};
-
-    
-
-    float r0 = (n_space / 8) * a0; // if sphere this is the radius
-    float area = 4 * pi * r0 * r0;
-    float volume = 4 / 3 * pi * r0 * r0 * r0;
-    // float volume=((posHp[0]-posLp[0])*(posHp[1]-posLp[1])*(posHp[2]-posLp[2]))); //cube
-
-    // calculated plasma parameters
-    float Density_e = n_partd / volume * r_part_spart;
-    // float initial_current=Density_e*e_charge*v0[0][2]*area;
-    // float       Bmax=initial_current*2e-7/a0*10;
-
-    float plasma_freq = sqrt(Density_e * e_charge * e_charge_mass / (mp[0] * epsilon0)) / (2 * pi);
-    float plasma_period = 1 / plasma_freq;
-    float Debye_Length = sqrt(epsilon0 * kb * Temp[0] / (Density_e * e_charge * e_charge));
-    float vel_e = sqrt(kb * Temp[0] / (mp[0] * e_mass));
-    float Tv = a0 / vel_e; // time for electron to move across 1 cell
-    float Tcyclotron = 2.0 * pi * mp[0] / (e_charge_mass * Bmax);
-    float TDebye = Debye_Length / vel_e;
-    float TE = sqrt(2 * a0 / e_charge_mass / Emax);
-    // set time step to allow electrons to gyrate if there is B field or to allow electrons to move slowly throughout the plasma distance
-
     float dt[2];
-    dt[0] = 40 * min(min(min(TDebye, min(Tv / ncalc[0], Tcyclotron) / 4), plasma_period / ncalc[0] / 4), TE / ncalc[0]) / 2; // electron should not move more than 1 cell after ncalc*dt and should not make more than 1/4 gyration and must calculate E before the next 1/4 plasma period
-    // dt[0] /= 2.f;
-    // Bmax *= 2;
-    // Emax *= 4;
-    dt[1] = dt[0] * (ncalc[0] / ncalc[1]);
-    //  float mu0_4pidt[2]= {mu0_4pi/dt[0],mu0_4pi/dt[1]};
-    cout << "v0 electron = " << v0[0][0] << "," << v0[0][1] << "," << v0[0][2] << endl;
-    //   cout <<"Initial Current = "<<initial_current<<endl;
-    //   cout <<"Initial Bmax = "<<initial_current*2e-7/a0<<endl;
-
     cout << "Start up dt = " << timer.replace() << "s\n";
 #define generateRandom
 #ifdef generateRandom
-    // set initial positions and velocity
-    float sigma[2] = {sqrt(kb * Temp[0] / (mp[0] * e_mass)), sqrt(kb * Temp[1] / (mp[1] * e_mass))};
-    long seed;
-    gsl_rng *rng;                        // random number generator
-    rng = gsl_rng_alloc(gsl_rng_rand48); // pick random number generator
-    seed = 1670208073;                   // time(NULL);
-    cout << "seed=" << seed << "\n";
-    gsl_rng_set(rng, seed); // set seed
-
-    /*float posLp[3], posHp[3];
-    for (int c = 0; c < 3; c++)
-    {
-        posLp[c] = -a0 * n_space / 4;
-        posHp[c] = a0 * n_space / 4;
-    }*/
-
-    for (int p = 0; p < 2; p++)
-    {
-        //#pragma omp parallel for reduction(+ \
-                                   : nt)
-        for (int n = 0; n < n_partd; n++)
-        {
-
-            // spherical plasma radius is 1/8 of total extent.
-            float r = r0 * pow(gsl_ran_flat(rng, 0, 1), 0.3333333333);
-            // if (p == 0) r += n_space / 8 * a0;
-            double x, y, z;
-            gsl_ran_dir_3d(rng, &x, &y, &z);
-            pos0x[p][n] = r * x;
-            pos1x[p][n] = pos0x[p][n] + (gsl_ran_gaussian(rng, sigma[p]) + v0[p][0]) * dt[p];
-            pos0y[p][n] = r * y;
-            pos1y[p][n] = pos0y[p][n] + (gsl_ran_gaussian(rng, sigma[p]) + v0[p][1]) * dt[p];
-            pos0z[p][n] = r * z;
-            pos1z[p][n] = pos0z[p][n] + (gsl_ran_gaussian(rng, sigma[p]) + v0[p][2]) * dt[p];
-            //          if (n==0) cout << "p = " <<p <<", sigma = " <<sigma[p]<<", temp = " << Temp[p] << ",mass of particle = " << mp[p] << dt[p]<<endl;
-            q[p][n] = qs[p];
-            m[p][n] = mp[p];
-            nt[p] += q[p][n];
-        }
-    }
-
-    gsl_rng_free(rng); // dealloc the rng
-
-// get limits and spacing of Field cells
+    generate_rand_sphere(a0, pos0x, pos0y, pos0z, pos1x, pos1y, pos1z, q, m, nt,dt);
 #else
     generateParticles(a0, r0, qs, mp, pos0x, pos0y, pos0z, pos1x, pos1y, pos1z, q, m, nt);
     n_part[0] = abs(nt[0]);
     n_part[1] = abs(nt[1]);
     n_part[2] = n_part[0] + n_part[1];
 #endif
+    // get limits and spacing of Field cells
     generateField(Ee, Be);
+    
     cout << "Set initial random positions: " << timer.replace() << "s\n";
     float posL[3], posH[3], posL2[3], dd[3];
     // set spacing between cells
@@ -206,6 +125,7 @@ int main()
 
     // print initial conditions
     {
+        /*
         cout << "electron Temp = " << Temp[0] << " K, electron Density = " << Density_e << " m^-3" << endl;
         cout << "Plasma Frequency(assume cold) = " << plasma_freq << " Hz, Plasma period = " << plasma_period << " s" << endl;
         cout << "Cyclotron period = " << Tcyclotron << " s, Time for electron to move across 1 cell = " << Tv << " s" << endl;
@@ -214,8 +134,9 @@ int main()
         cout << "dt = " << dt[0] << " s, Total time = " << dt[0] * ncalc[0] * ndatapoints * nc << ", s" << endl;
         cout << "Debye Length = " << Debye_Length << " m, initial dimension = " << a0 << " m" << endl;
         cout << "number of particle per cell = " << n_partd / (n_space * n_space * n_space) * 8 << endl;
-
+*/
         E_file.open("info.csv");
+        /*
         E_file << ",X, Y, Z" << endl;
         E_file << "Data Origin," << posL[0] << "," << posL[1] << "," << posL[0] << endl;
         E_file << "Data Spacing," << dd[0] << "," << dd[1] << "," << dd[2] << endl;
@@ -234,16 +155,19 @@ int main()
         E_file << "Time for electron to move across 1 cell TE =," << TE << ",s" << endl;
         E_file << "time step between prints = ," << dt[0] * ncalc[0] * nc << ",s" << endl;
         E_file << "time step between EBcalc = ," << dt[0] * ncalc[0] << ",s" << endl;
-        E_file << "dt =," << dt[0] << ",s" << endl;
+
         E_file << "Debye Length =," << Debye_Length << ",m" << endl;
         E_file << "Larmor radius =," << vel_e / (Bmax * e_charge_mass) << ",m" << endl;
-        E_file << "cell size =," << a0 << ",m" << endl;
+   
+   */
+          E_file << "dt =," << dt[0] << ",s" << endl;
+       E_file << "cell size =," << a0 << ",m" << endl;
         E_file << "number of particles per cell = ," << n_partd / (n_space * n_space * n_space) << endl;
         E_file.close();
     }
 
     int i_time = 0;
-    get_densityfields(currentj, np, npt, nt, KEtot, posL, posH, dd, pos1x, pos1y, pos1z, pos0x, pos0y, pos0z, q, dt, mp, n_part, jc);
+    get_densityfields(currentj, np, npt, nt, KEtot, posL, posH, dd, pos1x, pos1y, pos1z, pos0x, pos0y, pos0z, q, dt, n_part, jc);
     calcEBV(V, E, B, Ee, Be, npt, jc, dd, Emax, Bmax);
     calc_trilin_constants(E, Ea, dd, posL);
     calc_trilin_constants(B, Ba, dd, posL);
@@ -263,36 +187,10 @@ int main()
 
     for (i_time = 1; i_time < ndatapoints; i_time++)
     {
-        save_hist(i_time,t, n_partd, mp, dt, pos0x, pos0y, pos0z, pos1x, pos1y, pos1z);
+        save_hist(i_time, t, n_partd, dt, pos0x, pos0y, pos0z, pos1x, pos1y, pos1z);
         for (int ntime = 0; ntime < nc; ntime++)
         {
-            /*
-            for (int p = 0; p < 2; ++p){
-                float dposx = -1.f, dposy = -1.f, dposz = -1.f, dpos = -1.f;
-                for (int i = 0; i < n_part[p]; ++i)
-                {
-                    float dx = pos1x[p][i] - pos0x[p][i];
-                    float dy = pos1y[p][i] - pos0y[p][i];
-                    float dz = pos1z[p][i] - pos0z[p][i];
-                    float dp = sqrt(dx * dx + dy * dy + dz * dz);
 
-                    if (dp > dpos) {
-                        dpos = dp;
-                        dposx = dx;
-                        dposy = dy;
-                        dposz = dz;
-                    }
-                    dpos = max(dpos, dp);
-                    dposx = max(dposx, dx);
-                    dposy = max(dposy, dy);
-                    dposz = max(dposz, dz);
-                }
-                if(p != 0) continue;
-                cout.precision(15);
-                cout << "Fastest " << p << ": " << dpos << " (" << dposx/dd[0] << ", " << dposy/dd[1] << ", " << dposz/dd[2] << ")\n";
-                cout.precision(3);
-            }
-            */
             timer.mark(); // For timestep
             // Work out motion
             timer.mark();
@@ -322,7 +220,7 @@ int main()
 
             //  find number of particle and current density fields
             timer.mark();
-            get_densityfields(currentj, np, npt, nt, KEtot, posL, posH, dd, pos1x, pos1y, pos1z, pos0x, pos0y, pos0z, q, dt, mp, n_part, jc);
+            get_densityfields(currentj, np, npt, nt, KEtot, posL, posH, dd, pos1x, pos1y, pos1z, pos0x, pos0y, pos0z, q, dt, n_part, jc);
             cout << "density: " << timer.elapsed() << "s, ";
 
             // find E field must work out every i,j,k depends on charge in every other cell
@@ -377,4 +275,3 @@ int main()
     logger.close();
     return 0;
 }
-

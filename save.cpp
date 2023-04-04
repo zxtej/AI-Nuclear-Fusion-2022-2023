@@ -24,7 +24,7 @@ void save_files(int i_time, unsigned int n_space_div[3], float posL[3], float dd
   save_vtp("d", i_time, n_output_part, 1, t, KE, posp);
 #endif
 }
-void save_hist(int i_time, double t, int npart, int mp[2], float dt[2], float pos0x[2][n_partd], float pos0y[2][n_partd], float pos0z[2][n_partd], float pos1x[2][n_partd], float pos1y[2][n_partd], float pos1z[2][n_partd])
+void save_hist(int i_time, double t, int npart, float dt[2], float pos0x[2][n_partd], float pos0y[2][n_partd], float pos0z[2][n_partd], float pos1x[2][n_partd], float pos1y[2][n_partd], float pos1z[2][n_partd])
 {
   // Create the vtkTable object
   vtkSmartPointer<vtkTable> table = vtkSmartPointer<vtkTable>::New();

@@ -122,7 +122,7 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
                        int nt[2], float KEtot[2], float posL[3], float posH[3], float dd[3],
                        float pos1x[2][n_partd], float pos1y[2][n_partd], float pos1z[2][n_partd],
                        float pos0x[2][n_partd], float pos0y[2][n_partd], float pos0z[2][n_partd],
-                       int q[2][n_partd], float dt[2], int mp[2], int n_part[2],
+                       int q[2][n_partd], float dt[2], int n_part[2],
                        float jc[3][n_space_divz][n_space_divy][n_space_divz]);
 void calc_trilin_constants(float E[3][n_space_divz][n_space_divy][n_space_divx],
                            float Ea[n_space_divz][n_space_divy][n_space_divx][3][ncoeff],
@@ -139,6 +139,10 @@ void generateParticles(float a0, float r0, int *qs, int *mp, float pos0x[2][n_pa
                        float pos1x[2][n_partd], float pos1y[2][n_partd], float pos1z[2][n_partd], int q[2][n_partd], int m[2][n_partd], int *nt);
 void generateField(float Ee[3][n_space_divz][n_space_divy][n_space_divx], float Be[3][n_space_divz][n_space_divy][n_space_divx]);
 void id_to_cell(int id, int *x, int *y, int *z);
-void save_hist(int i_time, double t, int npart, int mp[2], float dt[2], float pos0x[2][n_partd], float pos0y[2][n_partd], float pos0z[2][n_partd], float pos1x[2][n_partd], float pos1y[2][n_partd], float pos1z[2][n_partd]);
+void save_hist(int i_time, double t, int npart, float dt[2], float pos0x[2][n_partd], float pos0y[2][n_partd], float pos0z[2][n_partd], float pos1x[2][n_partd], float pos1y[2][n_partd], float pos1z[2][n_partd]);
+
+void generate_rand_sphere(float a0, float pos0x[2][n_partd], float pos0y[2][n_partd], float pos0z[2][n_partd],
+                          float pos1x[2][n_partd], float pos1y[2][n_partd], float pos1z[2][n_partd], 
+                          int q[2][n_partd], int m[2][n_partd], int nt[2],float dt[2]);
 
 #endif // TRAJ_H_INCLUDED
