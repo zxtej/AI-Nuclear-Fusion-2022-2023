@@ -1,0 +1,5 @@
+**/.vscode/
+obj/
+obj_debug/
+*.csv
+*.exe
