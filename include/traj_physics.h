@@ -21,7 +21,7 @@
 
 constexpr float a0 = 200e-3; // typical dimensions of a cell
 // technical parameters
-constexpr int n_space = 64;                              // must be 2 to power of n
+constexpr int n_space = 128;                              // must be 2 to power of n
 constexpr int n_partd = n_space * n_space * n_space * 1; // must be 2 to power of n
 constexpr int n_parte = n_partd;
 constexpr unsigned int ncoeff = 8;
