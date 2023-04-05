@@ -4,7 +4,7 @@ For settings (as to what to calculate, eg. E / B field, E / B force) go to the d
 */
 #include "include/traj.h"
 // sphere
- int ncalc[2] = {md_me * 1, 1};
+int ncalc[2] = {md_me * 1, 1};
 int n_part[3] = {n_parte, n_partd, n_parte + n_partd}; // 0,number of "super" electrons, electron +deuteriom ions, total
 unsigned int n_space_div[3] = {n_space_divx, n_space_divy, n_space_divz};
 unsigned int n_space_div2[3] = {n_space_divx2, n_space_divy2, n_space_divz2};
@@ -92,7 +92,8 @@ int main()
     cout << "Start up dt = " << timer.replace() << "s\n";
 #define generateRandom
 #ifdef generateRandom
-    generate_rand_sphere(a0, pos0x, pos0y, pos0z, pos1x, pos1y, pos1z, q, m, nt,dt);
+    //    generate_rand_sphere(a0, pos0x, pos0y, pos0z, pos1x, pos1y, pos1z, q, m, nt,dt);
+    generate_rand_cylinder(a0, pos0x, pos0y, pos0z, pos1x, pos1y, pos1z, q, m, nt, dt);
 #else
     generateParticles(a0, r0, qs, mp, pos0x, pos0y, pos0z, pos1x, pos1y, pos1z, q, m, nt);
     n_part[0] = abs(nt[0]);
@@ -101,7 +102,7 @@ int main()
 #endif
     // get limits and spacing of Field cells
     generateField(Ee, Be);
-    
+
     cout << "Set initial random positions: " << timer.replace() << "s\n";
     float posL[3], posH[3], posL2[3], dd[3];
     // set spacing between cells
@@ -158,10 +159,10 @@ int main()
 
         E_file << "Debye Length =," << Debye_Length << ",m" << endl;
         E_file << "Larmor radius =," << vel_e / (Bmax * e_charge_mass) << ",m" << endl;
-   
+
    */
-          E_file << "dt =," << dt[0] << ",s" << endl;
-       E_file << "cell size =," << a0 << ",m" << endl;
+        E_file << "dt =," << dt[0] << ",s" << endl;
+        E_file << "cell size =," << a0 << ",m" << endl;
         E_file << "number of particles per cell = ," << n_partd / (n_space * n_space * n_space) << endl;
         E_file.close();
     }
