@@ -165,7 +165,7 @@ void generateEmptyField(float Ee[3][n_space_divz][n_space_divy][n_space_divx], f
 
                 Ee[0][k][j][i] = 0; // 1000+i*100;
                 Ee[1][k][j][i] = 0; // 2000+j*100;
-                Ee[2][k][j][i] = 0; // 3000+k*100;
+                Ee[2][k][j][i] = 3000; // 3000+k*100;
 
                 Be[0][k][j][i] = 0; // z/sqrt(x*x+y*y);
                 Be[1][k][j][i] = 0; // z/sqrt(x*x+y*y);

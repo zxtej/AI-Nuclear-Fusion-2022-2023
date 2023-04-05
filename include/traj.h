@@ -145,4 +145,7 @@ void generate_rand_sphere(float a0, float pos0x[2][n_partd], float pos0y[2][n_pa
                           float pos1x[2][n_partd], float pos1y[2][n_partd], float pos1z[2][n_partd], 
                           int q[2][n_partd], int m[2][n_partd], int nt[2],float dt[2]);
 
+void generate_rand_cylinder(float a0, float pos0x[2][n_partd], float pos0y[2][n_partd], float pos0z[2][n_partd],
+                          float pos1x[2][n_partd], float pos1y[2][n_partd], float pos1z[2][n_partd],
+                          int q[2][n_partd], int m[2][n_partd], int nt[2], float dt[2]);
 #endif // TRAJ_H_INCLUDED

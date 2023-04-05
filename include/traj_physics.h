@@ -19,7 +19,7 @@
 #define Hist_n 256
 #define Hist_max Temp_e / 11600 * 20 // in eV Kelvin to eV is divide by 11600
 
-constexpr float a0 = 200e-3; // typical dimensions of a cell
+constexpr float a0 = 20e-3; // typical dimensions of a cell
 // technical parameters
 constexpr int n_space = 64;                              // must be 2 to power of n
 constexpr int n_partd = n_space * n_space * n_space * 1; // must be 2 to power of n
@@ -40,7 +40,7 @@ constexpr int nthreads = 8;    // match with your CPU
 constexpr float Bmax0 = 1;
 constexpr float Emax0 = 1e9;
 
-constexpr float target_part = 1e15;
+constexpr float target_part = 1e16;
 constexpr float r_part_spart = target_part / n_partd; // 1e12 / n_partd; // ratio of particles per tracked "super" particle
 // ie. the field of N particles will be multiplied by (1e12/N), as if there were 1e12 particles
 
