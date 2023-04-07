@@ -12,7 +12,7 @@ constexpr float target_part = 1e17;
 
 // technical parameters
 constexpr int n_space = 64;                              // must be 2 to power of n
-constexpr int n_partd = n_space * n_space * n_space * 64; // must be 2 to power of n
+constexpr int n_partd = n_space * n_space * n_space * 8; // must be 2 to power of n
 constexpr int n_parte = n_partd;
 
 constexpr unsigned int ncoeff = 8;
