@@ -1,6 +1,6 @@
 #define RamDisk // whether to use RamDisk
 #define maxcells 32
-#define cldevice 0
+#define cldevice 1
 
 #define Temp_e 1e8 // in Kelvin
 #define Temp_d 1e8 // in Kelvin
@@ -8,11 +8,11 @@
 #define Hist_max Temp_e / 11600 * 20 // in eV Kelvin to eV is divide by 11600
 
 constexpr float a0 = 20e-3; // typical dimensions of a cell
-constexpr float target_part = 1e18;
+constexpr float target_part = 1e17;
 
 // technical parameters
 constexpr int n_space = 64;                              // must be 2 to power of n
-constexpr int n_partd = n_space * n_space * n_space * 1; // must be 2 to power of n
+constexpr int n_partd = n_space * n_space * n_space * 64; // must be 2 to power of n
 constexpr int n_parte = n_partd;
 
 constexpr unsigned int ncoeff = 8;
@@ -21,7 +21,7 @@ constexpr int n_output_part = (n_partd > 8192) ? 8192 : n_partd; // maximum numb
 // const int nprtd=floor(n_partd/n_output_part);
 
 constexpr int ndatapoints = 30; // total number of time steps to calculate
-constexpr int nc = 30;           // number of times to calculate E and B between printouts
+constexpr int nc = 300;           // number of times to calculate E and B between printouts
 constexpr int md_me = 60;        // ratio of electron speed/deuteron speed at the same KE. Used to calculate electron motion more often than deuteron motion
 
 
@@ -40,8 +40,8 @@ constexpr int md_me = 60;        // ratio of electron speed/deuteron speed at th
 constexpr int nthreads = 8;    // match with your CPU
 // The maximum expected E and B fields. If fields go beyond this, the the time step, cell size etc will be wrong. Should adjust and recalculate.
 //  maximum expected magnetic field
-constexpr float Bmax0 = 1;
-constexpr float Emax0 = 1e9;
+constexpr float Bmax0 = 10000;
+constexpr float Emax0 = 1e10;
 
 constexpr float r_part_spart = target_part / n_partd; // 1e12 / n_partd; // ratio of particles per tracked "super" particle
 // ie. the field of N particles will be multiplied by (1e12/N), as if there were 1e12 particles

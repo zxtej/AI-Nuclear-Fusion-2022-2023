@@ -44,11 +44,11 @@ void save_hist(int i_time, double t, int npart, float dt[2], float pos0x[2][n_pa
       float dx = pos1x[p][i] - pos0x[p][i];
       float dy = pos1y[p][i] - pos0y[p][i];
       float dz = pos1z[p][i] - pos0z[p][i];
-      int index = (int)floor(0.5 * (float)mp[p] * (dx * dx + dy * dy + dz * dz) * (float)Hist_n/ (e_charge_mass * dt[p] * dt[p]*(float)Hist_max)) ;
+      unsigned int index = (int)floor(0.5 * (float)mp[p] * (dx * dx + dy * dy + dz * dz) * (float)Hist_n/ (e_charge_mass * dt[p] * dt[p]*(float)Hist_max)) ;
       if (index >= Hist_n)
         index = Hist_n - 1;
-      if (index < 0)
-        cout << "error index<0" << endl;
+   //   if (index < 0)
+   //     cout << "error index<0"<<(0.5 * (float)mp[p] * (dx * dx + dy * dy + dz * dz) * (float)Hist_n/ (e_charge_mass * dt[p] * dt[p]*(float)Hist_max))<< endl;
       KEhist[p][index]++;
     }
   // Add the histogram values to the arrays

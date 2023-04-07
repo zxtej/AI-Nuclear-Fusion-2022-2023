@@ -88,9 +88,10 @@ void generate_rand_cylinder(float a0, float pos0x[2][n_partd], float pos0y[2][n_
     // float volume=((posHp[0]-posLp[0])*(posHp[1]-posLp[1])*(posHp[2]-posLp[2]))); //cube
 
     // calculated plasma parameters
+    cout << "initial e Temperature, = " << Temp_e/11600 <<"eV, initial d Temperature, = " << Temp_d/11600<< " eV\n";
     float Density_e = n_partd / volume * r_part_spart;
+    cout << "initial density = " << Density_e << endl;
     float initial_current = Density_e * e_charge * v0[0][2] * area;
-
     cout << "initial current = " << initial_current << endl;
     float Bmaxi = initial_current * 2e-7 / r0;
     cout << "initial Bmax = " << Bmaxi << endl;
