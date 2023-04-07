@@ -150,6 +150,64 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
     static float xhd = posH[0] - dd[0] * 1;
     static float yhd = posH[1] - dd[1] * 1;
     static float zhd = posH[2] - dd[2] * 1;
+    
+    static float cx[2][n_parte];
+    static float cy[2][n_parte];
+    static float cz[2][n_parte];
+    
+    static unsigned int ii[2][n_parte];
+    static unsigned int jj[2][n_parte];
+    static unsigned int kk[2][n_parte];
+    
+    static float vx[2][n_parte];
+    static float vy[2][n_parte];
+    static float vz[2][n_parte];
+
+    static float fracx[2][n_parte];
+    static float fracy[2][n_parte];
+    static float fracz[2][n_parte];
+    static float fracx1[2][n_parte];
+    static float fracy1[2][n_parte];
+    static float fracz1[2][n_parte];
+
+    static float total[2][n_parte];
+
+    static float c0[2][n_parte];
+    static float c1[2][n_parte];
+    static float c2[2][n_parte];
+    static float c3[2][n_parte];
+    static float c4[2][n_parte];
+    static float c5[2][n_parte];
+    static float c6[2][n_parte];
+    static float c7[2][n_parte];
+
+    static float c0x[2][n_parte];
+    static float c1x[2][n_parte];
+    static float c2x[2][n_parte];
+    static float c3x[2][n_parte];
+    static float c4x[2][n_parte];
+    static float c5x[2][n_parte];
+    static float c6x[2][n_parte];
+    static float c7x[2][n_parte];
+
+    static float c0y[2][n_parte];
+    static float c1y[2][n_parte];
+    static float c2y[2][n_parte];
+    static float c3y[2][n_parte];
+    static float c4y[2][n_parte];
+    static float c5y[2][n_parte];
+    static float c6y[2][n_parte];
+    static float c7y[2][n_parte];
+
+    static float c0z[2][n_parte];
+    static float c1z[2][n_parte];
+    static float c2z[2][n_parte];
+    static float c3z[2][n_parte];
+    static float c4z[2][n_parte];
+    static float c5z[2][n_parte];
+    static float c6z[2][n_parte];
+    static float c7z[2][n_parte];
+    
 #pragma omp parallel num_threads(2)
     {
         int p = omp_get_thread_num();
@@ -178,34 +236,31 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
         }
     }
 #pragma omp barrier
-//        cout << "get_densitya\n";
+    //        cout << "get_densitya\n";
+    float dxi = 1.0 / dd[0];
+    float dyi = 1.0 / dd[1];
+    float dzi = 1.0 / dd[2];
+    float ds2 = (dd[0] * dd[0] + dd[1] * dd[1] + dd[2] * dd[2]) / 1e8;
 #pragma omp parallel num_threads(2)
     {
         int p = omp_get_thread_num();
-        //           cout << "p2=" << p << ",";
+        //                cout << "p2=" << p << ",";
+        //                   float charge = q[p][n];
+#pragma omp parallel for simd num_threads(8)
         for (int n = 0; n < n_part[p]; ++n)
         {
-            unsigned int i, j, k;
-            float fracx, fracy, fracz; // integer and fractional component of the position
-            //           cout << " thread: " << omp_get_thread_num() << endl;
-            //    if (n == 0)  cout << "n=" << n << ", p=" << p << end; << pos1x[p][n] << ", "<< pos1y[p][n] << ", "<< pos1z[p][n] << "\n ";
-            float cx = (pos1x[p][n] - posL[0]) / dd[0];
-            float cy = (pos1y[p][n] - posL[1]) / dd[1];
-            float cz = (pos1z[p][n] - posL[2]) / dd[2];
-
-            i = (unsigned int)cx;
-            fracx = cx - i;
-            j = (unsigned int)cy;
-            fracy = cy - j;
-            k = (unsigned int)cz;
-            fracz = cz - k;
-
-            // I'm not sure whether this algorithm is correct, but it seems legit
-            // Only drawback is that it is not exact (a tiny fraction of charge leaks)
-            float fracx1 = 1 - fracx, fracy1 = 1 - fracy, fracz1 = 1 - fracz, charge = q[p][n];
-            float fx_2 = fracx * fracx, fy_2 = fracy * fracy, fz_2 = fracz * fracz;
-            float fx1_2 = fracx1 * fracx1, fy1_2 = fracy1 * fracy1, fz1_2 = fracz1 * fracz1;
-            // The problem with any distribution is that it will end up pushing itself, although overall it still leads to slightly better stability
+            cx[p][n] = (pos1x[p][n] - posL[0]) * dxi;
+            cy[p][n] = (pos1y[p][n] - posL[1]) / dyi;
+            cz[p][n] = (pos1z[p][n] - posL[2]) / dzi;
+            ii[p][n] = cx[p][n];
+            jj[p][n] = cy[p][n];
+            kk[p][n] = cz[p][n];
+            fracx[p][n] = cx[p][n] - ii[p][n];
+            fracy[p][n] = cy[p][n] - jj[p][n];
+            fracz[p][n] = cz[p][n] - kk[p][n];
+            fracx1[p][n] = 1.0 - fracx[p][n];
+            fracy1[p][n] = 1.0 - fracy[p][n];
+            fracz1[p][n] = 1.0 - fracz[p][n];
 #ifdef LinearDistribution // Distribute the particle according to 1/r, not defining this will distribute according to 1/r2
             float coeffs[8] = {
                 fracx1 * fracy1 * fracz1,
@@ -220,83 +275,119 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
             for (int i = 0; i < 8; ++i)
                 coeffs[i] *= charge;
 #else
-            bool hasZero = (fracx == 0 || fracx1 == 0) && (fracy == 0 || fracy1 == 0) && (fracz == 0 || fracz1 == 0);
-            float coeffs[8]; // c000, c100, c010, c110, c001, c101, c011, c111;
-            if (hasZero)
-            {
-                // deduce cell/coefficient index where the particle is precisely at
-                unsigned int idx = ((fracx1 == 0) << 0) + ((fracy1 == 0) << 1) + ((fracz1 == 0) << 2);
-                fill(coeffs, coeffs + 8, 0.f);
-                coeffs[idx] = 1.f;
-            }
-            else
-            {
-                coeffs[0] = 1.f / (fx_2 + fy_2 + fz_2);
-                coeffs[1] = 1.f / (fx1_2 + fy_2 + fz_2);
-                coeffs[2] = 1.f / (fx_2 + fy1_2 + fz_2);
-                coeffs[3] = 1.f / (fx1_2 + fy1_2 + fz_2);
-                coeffs[4] = 1.f / (fx_2 + fy_2 + fz1_2);
-                coeffs[5] = 1.f / (fx1_2 + fy_2 + fz1_2);
-                coeffs[6] = 1.f / (fx_2 + fy1_2 + fz1_2);
-                coeffs[7] = 1.f / (fx1_2 + fy1_2 + fz1_2);
-            }
-            float total = coeffs[0] + coeffs[1] + coeffs[2] + coeffs[3] + coeffs[4] + coeffs[5] + coeffs[6] + coeffs[7];
-            total = charge / total; // Multiply r... by charge, ie total /= charge.
-                                    // Then take the reciprocal for multiplication (faster)
-#pragma unroll(8)
-            for (int i = 0; i < 8; ++i)
-                coeffs[i] *= total;
+            // I'm not sure whether this algorithm is correct, but it seems legit
+            // Only drawback is that it is not exact (a tiny fraction of charge leaks)
+            float fx_2 = fracx[p][n] * fracx[p][n], fy_2 = fracy[p][n] * fracy[p][n], fz_2 = fracz[p][n] * fracz[p][n];
+            float fx1_2 = fracx1[p][n] * fracx1[p][n], fy1_2 = fracy1[p][n] * fracy1[p][n], fz1_2 = fracz1[p][n] * fracz1[p][n];
+            // The problem with any distribution is that it will end up pushing itself, although overall it still leads to slightly better stability
+            c0[p][n] = 1.f / (fx_2 + fy_2 + fz_2 + ds2);
+            c1[p][n] = 1.f / (fx1_2 + fy_2 + fz_2 + ds2);
+            c2[p][n] = 1.f / (fx_2 + fy1_2 + fz_2 + ds2);
+            c3[p][n] = 1.f / (fx1_2 + fy1_2 + fz_2 + ds2);
+            c4[p][n] = 1.f / (fx_2 + fy_2 + fz1_2 + ds2);
+            c5[p][n] = 1.f / (fx1_2 + fy_2 + fz1_2 + ds2);
+            c6[p][n] = 1.f / (fx_2 + fy1_2 + fz1_2 + ds2);
+            c7[p][n] = 1.f / (fx1_2 + fy1_2 + fz1_2 + ds2);
+            total[p][n] = (float)q[p][n] / (c0[p][n] + c1[p][n] + c2[p][n] + c3[p][n] + c4[p][n] + c5[p][n] + c6[p][n] + c7[p][n]); // Multiply r... by charge, ie total /= charge.
+                                                                                                                                    // Then take the reciprocal for multiplication (faster)
+            c0[p][n] *= total[p][n];
+            c1[p][n] *= total[p][n];
+            c2[p][n] *= total[p][n];
+            c3[p][n] *= total[p][n];
+            c4[p][n] *= total[p][n];
+            c5[p][n] *= total[p][n];
+            c6[p][n] *= total[p][n];
+            c7[p][n] *= total[p][n];
+
+            vx[p][n] = (pos1x[p][n] - pos0x[p][n]) / dt[p];
+            vy[p][n] = (pos1y[p][n] - pos0y[p][n]) / dt[p];
+            vz[p][n] = (pos1z[p][n] - pos0z[p][n]) / dt[p];
+
+            KEtot[p] += vx[p][n] * vx[p][n] + vy[p][n] + vz[p][n] * vz[p][n];
+
+            c0x[p][n] = c0[p][n] * vx[p][n];
+            c1x[p][n] = c1[p][n] * vx[p][n];
+            c2x[p][n] = c2[p][n] * vx[p][n];
+            c3x[p][n] = c3[p][n] * vx[p][n];
+            c4x[p][n] = c4[p][n] * vx[p][n];
+            c5x[p][n] = c5[p][n] * vx[p][n];
+            c6x[p][n] = c6[p][n] * vx[p][n];
+            c7x[p][n] = c7[p][n] * vx[p][n];
+
+            c0y[p][n] = c0[p][n] * vy[p][n];
+            c1y[p][n] = c1[p][n] * vy[p][n];
+            c2y[p][n] = c2[p][n] * vy[p][n];
+            c3y[p][n] = c3[p][n] * vy[p][n];
+            c4y[p][n] = c4[p][n] * vy[p][n];
+            c5y[p][n] = c5[p][n] * vy[p][n];
+            c6y[p][n] = c6[p][n] * vy[p][n];
+            c7y[p][n] = c7[p][n] * vy[p][n];
+
+            c0z[p][n] = c0[p][n] * vz[p][n];
+            c1z[p][n] = c1[p][n] * vz[p][n];
+            c2z[p][n] = c2[p][n] * vz[p][n];
+            c3z[p][n] = c3[p][n] * vz[p][n];
+            c4z[p][n] = c4[p][n] * vz[p][n];
+            c5z[p][n] = c5[p][n] * vz[p][n];
+            c6z[p][n] = c6[p][n] * vz[p][n];
+            c7z[p][n] = c7[p][n] * vz[p][n];
+
 #endif
-            // number of charge (in units of 1.6e-19 C) in each cell
-            np[p][k][j][i] += coeffs[0];
-            np[p][k][j][i + 1] += coeffs[1];
-            np[p][k][j + 1][i] += coeffs[2];
-            np[p][k][j + 1][i + 1] += coeffs[3];
-            np[p][k + 1][j][i] += coeffs[4];
-            np[p][k + 1][j][i + 1] += coeffs[5];
-            np[p][k + 1][j + 1][i] += coeffs[6];
-            np[p][k + 1][j + 1][i + 1] += coeffs[7];
-            nt[p] += q[p][n];
-            // cout << coeffs[0] + coeffs[1] + coeffs[2] + coeffs[3] + coeffs[4] + coeffs[5] + coeffs[6] + coeffs[7] << endl;
-            //  current density p=0 electron j=nev in each cell n in units 1.6e-19 C m/s
-            float dx = pos1x[p][n] - pos0x[p][n], dy = pos1y[p][n] - pos0y[p][n], dz = pos1z[p][n] - pos0z[p][n];
-            float vx = dx / dt[p], vy = dy / dt[p], vz = dz / dt[p];
-
-            currentj[p][0][k][j][i] += coeffs[0] * vx;
-            currentj[p][0][k][j][i + 1] += coeffs[1] * vx;
-            currentj[p][0][k][j + 1][i] += coeffs[2] * vx;
-            currentj[p][0][k][j + 1][i + 1] += coeffs[3] * vx;
-            currentj[p][0][k + 1][j][i] += coeffs[4] * vx;
-            currentj[p][0][k + 1][j][i + 1] += coeffs[5] * vx;
-            currentj[p][0][k + 1][j + 1][i] += coeffs[6] * vx;
-            currentj[p][0][k + 1][j + 1][i + 1] += coeffs[7] * vx;
-
-            currentj[p][1][k][j][i] += coeffs[0] * vy;
-            currentj[p][1][k][j][i + 1] += coeffs[1] * vy;
-            currentj[p][1][k][j + 1][i] += coeffs[2] * vy;
-            currentj[p][1][k][j + 1][i + 1] += coeffs[3] * vy;
-            currentj[p][1][k + 1][j][i] += coeffs[4] * vy;
-            currentj[p][1][k + 1][j][i + 1] += coeffs[5] * vy;
-            currentj[p][1][k + 1][j + 1][i] += coeffs[6] * vy;
-            currentj[p][1][k + 1][j + 1][i + 1] += coeffs[7] * vy;
-
-            currentj[p][2][k][j][i] += coeffs[0] * vz;
-            currentj[p][2][k][j][i + 1] += coeffs[1] * vz;
-            currentj[p][2][k][j + 1][i] += coeffs[2] * vz;
-            currentj[p][2][k][j + 1][i + 1] += coeffs[3] * vz;
-            currentj[p][2][k + 1][j][i] += coeffs[4] * vz;
-            currentj[p][2][k + 1][j][i + 1] += coeffs[5] * vz;
-            currentj[p][2][k + 1][j + 1][i] += coeffs[6] * vz;
-            currentj[p][2][k + 1][j + 1][i + 1] += coeffs[7] * vz;
-            KEtot[p] += vx * vx + vy * vy + vz * vz;
         }
         KEtot[p] *= 0.5 * mp[p] / e_charge_mass;
         KEtot[p] *= r_part_spart; // as if these particles were actually samples of the greater thing
-        //      cout <<maxk <<",";
+                                  //        cout << "get_density\n";        //      cout <<maxk <<",";
+        for (int n = 0; n < n_part[p]; ++n)
+        {
+            unsigned int i, j, k;
+            i = ii[p][n];
+            j = jj[p][n];
+            k = kk[p][n];
+
+            // number of charge (in units of 1.6e-19 C) in each cell
+            np[p][k][j][i] += c0[p][n];
+            np[p][k][j][i + 1] += c1[p][n];
+            np[p][k][j + 1][i] += c2[p][n];
+            np[p][k][j + 1][i + 1] += c3[p][n];
+            np[p][k + 1][j][i] += c4[p][n];
+            np[p][k + 1][j][i + 1] += c5[p][n];
+            np[p][k + 1][j + 1][i] += c6[p][n];
+            np[p][k + 1][j + 1][i + 1] += c7[p][n];
+            nt[p] += q[p][n];
+            // cout << coeffs[0] + coeffs[1] + coeffs[2] + coeffs[3] + coeffs[4] + coeffs[5] + coeffs[6] + coeffs[7] << endl;
+            //  current density p=0 electron j=nev in each cell n in units 1.6e-19 C m/s
+
+            currentj[p][0][k][j][i] += c0x[p][n];
+            currentj[p][0][k][j][i + 1] += c1x[p][n];
+            currentj[p][0][k][j + 1][i] += c2x[p][n];
+            currentj[p][0][k][j + 1][i + 1] += c3x[p][n];
+            currentj[p][0][k + 1][j][i] += c4x[p][n];
+            currentj[p][0][k + 1][j][i + 1] += c5x[p][n];
+            currentj[p][0][k + 1][j + 1][i] += c6x[p][n];
+            currentj[p][0][k + 1][j + 1][i + 1] += c7x[p][n];
+
+            currentj[p][1][k][j][i] += c0y[p][n];
+            currentj[p][1][k][j][i + 1] += c1y[p][n];
+            currentj[p][1][k][j + 1][i] += c2y[p][n];
+            currentj[p][1][k][j + 1][i + 1] += c3y[p][n];
+            currentj[p][1][k + 1][j][i] += c4y[p][n];
+            currentj[p][1][k + 1][j][i + 1] += c5y[p][n];
+            currentj[p][1][k + 1][j + 1][i] += c6y[p][n];
+            currentj[p][1][k + 1][j + 1][i + 1] += c7y[p][n];
+
+            currentj[p][2][k][j][i] += c0z[p][n];
+            currentj[p][2][k][j][i + 1] += c1z[p][n];
+            currentj[p][2][k][j + 1][i] += c2z[p][n];
+            currentj[p][2][k][j + 1][i + 1] += c3z[p][n];
+            currentj[p][2][k + 1][j][i] += c4z[p][n];
+            currentj[p][2][k + 1][j][i + 1] += c5z[p][n];
+            currentj[p][2][k + 1][j + 1][i] += c6z[p][n];
+            currentj[p][2][k + 1][j + 1][i + 1] += c7z[p][n];
+        }
     }
 
 #pragma omp barrier
-    //       cout << "get_density\n";
+
 #pragma omp parallel for simd
     for (unsigned int i = 0; i < n_cells * 3; i++)
     {
