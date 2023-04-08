@@ -24,7 +24,7 @@ void save_files(int i_time, unsigned int n_space_div[3], float posL[3], float dd
   save_vtp("d", i_time, n_output_part, 1, t, KE, posp);
 #endif
 }
-void save_hist(int i_time, double t, int npart, float dt[2], float pos0x[2][n_partd], float pos0y[2][n_partd], float pos0z[2][n_partd], float pos1x[2][n_partd], float pos1y[2][n_partd], float pos1z[2][n_partd])
+void save_hist(int i_time, double t, int npart, float dt[2], float pos0x[2][n_partd], float pos0y[2][n_partd], float pos0z[2][n_partd], float pos1x[2][n_partd], float pos1y[2][n_partd], float pos1z[2][n_partd],int n_part[3])
 {
   // Create the vtkTable object
   vtkSmartPointer<vtkTable> table = vtkSmartPointer<vtkTable>::New();
@@ -39,14 +39,14 @@ void save_hist(int i_time, double t, int npart, float dt[2], float pos0x[2][n_pa
   double KEhist[2][Hist_n];
   memset(KEhist, 0, sizeof(KEhist));
   for (int p = 0; p < 2; ++p)
-    for (int i = 0; i < npart; ++i)
+    for (int i = 0; i < n_part[p]; ++i)
     {
       float dx = pos1x[p][i] - pos0x[p][i];
       float dy = pos1y[p][i] - pos0y[p][i];
       float dz = pos1z[p][i] - pos0z[p][i];
       unsigned int index = (int)floor(0.5 * (float)mp[p] * (dx * dx + dy * dy + dz * dz) * (float)Hist_n/ (e_charge_mass * dt[p] * dt[p]*(float)Hist_max)) ;
-      if (index >= Hist_n)
-        index = Hist_n - 1;
+      if (index < Hist_n)
+//        index = Hist_n - 1;
    //   if (index < 0)
    //     cout << "error index<0"<<(0.5 * (float)mp[p] * (dx * dx + dy * dy + dz * dz) * (float)Hist_n/ (e_charge_mass * dt[p] * dt[p]*(float)Hist_max))<< endl;
       KEhist[p][index]++;

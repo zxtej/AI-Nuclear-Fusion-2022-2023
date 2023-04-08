@@ -188,7 +188,7 @@ int main()
 
     for (i_time = 1; i_time < ndatapoints; i_time++)
     {
-    //    save_hist(i_time, t, n_partd, dt, pos0x, pos0y, pos0z, pos1x, pos1y, pos1z);
+    save_hist(i_time, t, n_partd, dt, pos0x, pos0y, pos0z, pos1x, pos1y, pos1z,n_part);
         for (int ntime = 0; ntime < nc; ntime++)
         {
 
