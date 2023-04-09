@@ -12,7 +12,7 @@ namespace {
 void calcU(float V[n_space_divz][n_space_divy][n_space_divx],
             float E[3][n_space_divz][n_space_divy][n_space_divz], float B[3][n_space_divz][n_space_divy][n_space_divx],
             float posx[2][n_partd], float posy[2][n_partd], float posz[2][n_partd],
-            float posL[3], float dd[3], int n_part[2], int q[2][n_partd], float out[2])
+            float posL[3], float dd[3], int n_part[3], int q[2][n_partd], float out[2])
 {
     const float dd0 = 1/dd[0], dd1 = 1/dd[1], dd2 = 1/dd[2];
     float EUtot = 0.f;

@@ -170,9 +170,11 @@ int main()
     int i_time = 0;
     get_densityfields(currentj, np, npt, nt, KEtot, posL, posH, dd, pos1x, pos1y, pos1z, pos0x, pos0y, pos0z, q, dt, n_part, jc);
     calcEBV(V, E, B, Ee, Be, npt, jc, dd, Emax, Bmax);
+    cout << "calc trilin constants\n";
     calc_trilin_constants(E, Ea, dd, posL);
     calc_trilin_constants(B, Ba, dd, posL);
 #ifdef Uon_
+    cout << "calcU\n";
     calcU(V, E, B, pos1x, pos1y, pos1z, posL, dd, n_part, q, U);
 #endif
     cout << i_time << "." << 0 << " (compute_time = " << timer.elapsed() << "s): ";
@@ -188,7 +190,7 @@ int main()
 
     for (i_time = 1; i_time < ndatapoints; i_time++)
     {
-    save_hist(i_time, t, n_partd, dt, pos0x, pos0y, pos0z, pos1x, pos1y, pos1z,n_part);
+        save_hist(i_time, t, n_partd, dt, pos0x, pos0y, pos0z, pos1x, pos1y, pos1z, n_part);
         for (int ntime = 0; ntime < nc; ntime++)
         {
 
@@ -245,7 +247,9 @@ int main()
 
 #ifdef Uon_
             // calculate the total potential energy U
+            cout << "calculate the total potential energy U\n";
             timer.mark();
+
             calcU(V, E, B, pos1x, pos1y, pos1z, posL, dd, n_part, q, U);
             cout << "U: " << timer.elapsed() << "s, ";
 #endif

@@ -14,7 +14,7 @@
 #include <string>
 #include <filesystem>
 #include <CL/opencl.hpp>
-#include <vtk/vtksys/Configure.hxx>
+//#include <vtk/vtksys/Configure.hxx>
 #include <vtk/vtkSmartPointer.h>
 #include <vtk/vtkFloatArray.h>
 #include <vtk/vtkDoubleArray.h>
@@ -122,7 +122,7 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
                        int nt[2], float KEtot[2], float posL[3], float posH[3], float dd[3],
                        float pos1x[2][n_partd], float pos1y[2][n_partd], float pos1z[2][n_partd],
                        float pos0x[2][n_partd], float pos0y[2][n_partd], float pos0z[2][n_partd],
-                       int q[2][n_partd], float dt[2], int n_part[2],
+                       int q[2][n_partd], float dt[2], int n_part[3],
                        float jc[3][n_space_divz][n_space_divy][n_space_divz]);
 void calc_trilin_constants(float E[3][n_space_divz][n_space_divy][n_space_divx],
                            float Ea[n_space_divz][n_space_divy][n_space_divx][3][ncoeff],
@@ -133,7 +133,7 @@ void changedt(float pos0x[2][n_partd], float pos0y[2][n_partd], float pos0z[2][n
 void calcU(float V[n_space_divz][n_space_divy][n_space_divx],
            float E[3][n_space_divz][n_space_divy][n_space_divx], float B[3][n_space_divz][n_space_divy][n_space_divx],
            float posx[2][n_partd], float posy[2][n_partd], float posz[2][n_partd],
-           float posL[3], float dd[3], int n_part[2], int q[2][n_partd], float out[2]);
+           float posL[3], float dd[3], int n_part[3], int q[2][n_partd], float out[2]);
 
 void generateParticles(float a0, float r0, int *qs, int *mp, float pos0x[2][n_partd], float pos0y[2][n_partd], float pos0z[2][n_partd],
                        float pos1x[2][n_partd], float pos1y[2][n_partd], float pos1z[2][n_partd], int q[2][n_partd], int m[2][n_partd], int *nt);
