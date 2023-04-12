@@ -101,8 +101,6 @@ void cl_start()
     std::ifstream t("cl_kernel_code.cl");
     std::string kernel_code((std::istreambuf_iterator<char>(t)),
                             std::istreambuf_iterator<char>());
-    //    kernel_code << t.rdbuf();
-    // std::string kernel_code ="";
 
     sources.push_back({kernel_code.c_str(), kernel_code.length()});
 
