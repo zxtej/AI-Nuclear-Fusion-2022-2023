@@ -6,7 +6,7 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
                        int nt[2], float KEtot[2], float posL[3], float posH[3], float dd[3],
                        float pos1x[2][n_partd], float pos1y[2][n_partd], float pos1z[2][n_partd],
                        float pos0x[2][n_partd], float pos0y[2][n_partd], float pos0z[2][n_partd],
-                       int q[2][n_partd], float dt[2], int n_part[2],
+                       int q[2][n_partd], float dt[2], int n_part[3],
                        float jc[3][n_space_divz][n_space_divy][n_space_divx])
 {
     // find number of particle and current density fields
@@ -21,17 +21,12 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
     KEtot[1] = 0;
     // set limits beyond which particle is considered as "lost"
 
-    static const float xld = posL[0] + dd[0] * 1;
-    static const float yld = posL[1] + dd[1] * 1;
-    static const float zld = posL[2] + dd[2] * 1;
-    static const float xhd = posH[0] - dd[0] * 1;
-    static const float yhd = posH[1] - dd[1] * 1;
-    static const float zhd = posH[2] - dd[2] * 1;
-
-    static const float dxi = 1.0 / dd[0];
-    static const float dyi = 1.0 / dd[1];
-    static const float dzi = 1.0 / dd[2];
-    static const float ds2 = (dd[0] * dd[0] + dd[1] * dd[1] + dd[2] * dd[2]) / 1e8;
+    static float xld = posL[0] + dd[0] * 1;
+    static float yld = posL[1] + dd[1] * 1;
+    static float zld = posL[2] + dd[2] * 1;
+    static float xhd = posH[0] - dd[0] * 1;
+    static float yhd = posH[1] - dd[1] * 1;
+    static float zhd = posH[2] - dd[2] * 1;
 
     static auto cx = new float[2][n_parte];
     static auto cy = new float[2][n_parte];
@@ -86,38 +81,47 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
     static auto c5z = new float[2][n_parte];
     static auto c6z = new float[2][n_parte];
     static auto c7z = new float[2][n_parte];
-
 #pragma omp parallel num_threads(2)
     {
         int p = omp_get_thread_num();
         //       cout << "p1=" << p << ",";
         for (int n = 0; n < n_part[p]; ++n)
         {
-            // replace out of bounds particles and reduce the number of particles.
-            if ((pos1x[p][n] <= xld) | (pos1y[p][n] <= yld) | (pos1z[p][n] <= zld) |
-                (pos1x[p][n] >= xhd) | (pos1y[p][n] >= yhd) | (pos1z[p][n] >= zhd) |
-                (pos0x[p][n] <= xld) | (pos0y[p][n] <= yld) | (pos0z[p][n] <= zld) |
-                (pos0x[p][n] >= xhd) | (pos0y[p][n] >= yhd) | (pos0z[p][n] >= zhd))
+            for (int n = 0; n < n_part[p]; ++n)
             {
-                int last = --n_part[p]; // move last particle here and discarding original
-                //               cout << "n=" << n << ", npart[" << p << "]=" << n_part[p] << ":" << pos0x[p][n] << ", " << pos0y[p][n] << ", " << pos0z[p][n] << endl;
-                pos0x[p][n] = pos0x[p][last];
-                pos0y[p][n] = pos0y[p][last];
-                pos0z[p][n] = pos0z[p][last];
-                pos1x[p][n] = pos1x[p][last];
-                pos1y[p][n] = pos1y[p][last];
-                pos1z[p][n] = pos1z[p][last];
-                q[p][n] = q[p][last];
-                q[p][last] = 0;
-                //                cout << "n=" << n << ", npart[" << p << "]=" << n_part[p] << ":" << pos1x[p][n] << ", " << pos1y[p][n] << ", " << pos1z[p][n] << endl;
-                n--;
+                const bool out_of_bounds =
+                    (pos1x[p][n] <= xld) || (pos1y[p][n] <= yld) || (pos1z[p][n] <= zld) ||
+                    (pos1x[p][n] >= xhd) || (pos1y[p][n] >= yhd) || (pos1z[p][n] >= zhd) ||
+                    (pos0x[p][n] <= xld) || (pos0y[p][n] <= yld) || (pos0z[p][n] <= zld) ||
+                    (pos0x[p][n] >= xhd) || (pos0y[p][n] >= yhd) || (pos0z[p][n] >= zhd);
+
+                if (out_of_bounds)
+                {
+                    int last = --n_part[p];
+                    pos0x[p][n] = pos0x[p][last];
+                    pos0y[p][n] = pos0y[p][last];
+                    pos0z[p][n] = pos0z[p][last];
+                    pos1x[p][n] = pos1x[p][last];
+                    pos1y[p][n] = pos1y[p][last];
+                    pos1z[p][n] = pos1z[p][last];
+                    q[p][n] = q[p][last];
+                    q[p][last] = 0;
+                    // discard the last particle by setting charge to 0 charge and decrement the particle count
+                    q[p][last] = 0;
+                    --n;
+                    // cout the new particle count and position (for debugging)
+                    // cout << "n=" << n << ", npart[" << p << "]=" << n_part[p] << ":" << pos1x[p][n] << ", " << pos1y[p][n] << ", " << pos1z[p][n] << endl;
+                }
             }
         }
     }
 #pragma omp barrier
 
-    //        cout << "get_densitya\n";
-
+            cout << "get_densitya\n";
+    float dxi = 1.0 / dd[0];
+    float dyi = 1.0 / dd[1];
+    float dzi = 1.0 / dd[2];
+    float ds2 = (dd[0] * dd[0] + dd[1] * dd[1] + dd[2] * dd[2]) / 1e8;
 #pragma omp parallel num_threads(2)
     {
         int p = omp_get_thread_num();
@@ -209,7 +213,6 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
         for (int n = 0; n < n_part[p]; ++n)
         {
             KEtot[p] += vc[p][0][n] * vc[p][0][n] + vc[p][1][n] * vc[p][1][n] + vc[p][2][n] * vc[p][2][n];
-            nt[p] += q[p][n];
         }
         KEtot[p] *= 0.5 * mp[p] / e_charge_mass;
         KEtot[p] *= r_part_spart; // as if these particles were actually samples of the greater thing
@@ -230,7 +233,7 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
             np[p][k + 1][j][i + 1] += c5[p][n];
             np[p][k + 1][j + 1][i] += c6[p][n];
             np[p][k + 1][j + 1][i + 1] += c7[p][n];
-
+            nt[p] += q[p][n];
             // cout << coeffs[0] + coeffs[1] + coeffs[2] + coeffs[3] + coeffs[4] + coeffs[5] + coeffs[6] + coeffs[7] << endl;
             //  current density p=0 electron j=nev in each cell n in units 1.6e-19 C m/s
 
@@ -264,17 +267,33 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
     }
 
 #pragma omp barrier
-
+/*
 #pragma omp parallel for simd
     for (unsigned int i = 0; i < n_cells * 3; i++)
     {
         (reinterpret_cast<float *>(jc))[i] = (reinterpret_cast<float *>(currentj[0]))[i] + (reinterpret_cast<float *>(currentj[1]))[i];
     }
-#pragma omp parallel for simd
+    #pragma omp parallel for simd
     for (unsigned int i = 0; i < n_cells; i++)
     {
         (reinterpret_cast<float *>(npt))[i] = (reinterpret_cast<float *>(np[0]))[i] + (reinterpret_cast<float *>(np[1]))[i];
     }
     //       cout << "get_density-done\n";
-    //    delete[] cx, cy, cz, ii, jj, kk, vx, vy, vz, fracx, fracy, fracz, total, c0, c1, c2, c3, c4, c5, c6, c7, c0x, c1x, c2x, c3x, c4x, c5x, c6x, c7x, c0y, c1y, c2y, c3y, c4y, c5y, c6y, c7y, c0z, c1z, c2z, c3z, c4z, c5z, c6z, c7z;
+    */
+#pragma omp parallel for
+    for (unsigned int i = 0; i < n_cells * 3; i += 8)
+    {
+        __m256 vec1 = _mm256_loadu_ps(reinterpret_cast<float *>(currentj[0]) + i);
+        __m256 vec2 = _mm256_loadu_ps(reinterpret_cast<float *>(currentj[1]) + i);
+        __m256 result = _mm256_add_ps(vec1, vec2);
+        _mm256_storeu_ps(reinterpret_cast<float *>(jc) + i, result);
+    }
+#pragma omp parallel for
+    for (unsigned int i = 0; i < n_cells; i += 8)
+    {
+        __m256 vec1 = _mm256_loadu_ps(reinterpret_cast<float *>(np[0]) + i);
+        __m256 vec2 = _mm256_loadu_ps(reinterpret_cast<float *>(np[1]) + i);
+        __m256 result = _mm256_add_ps(vec1, vec2);
+        _mm256_storeu_ps(reinterpret_cast<float *>(npt) + i, result);
+    }
 }

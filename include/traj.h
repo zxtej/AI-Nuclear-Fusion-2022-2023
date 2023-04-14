@@ -2,6 +2,7 @@
 #define TRAJ_H_INCLUDED
 #include "traj_physics.h"
 #define CL_HPP_TARGET_OPENCL_VERSION 300
+#include <immintrin.h>
 #include <iostream>
 #include <fstream>
 #include <chrono>
