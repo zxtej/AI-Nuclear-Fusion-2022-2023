@@ -215,7 +215,7 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
         KEtot[p] *= r_part_spart; // as if these particles were actually samples of the greater thing
                                   //        cout << "get_density\n";        //      cout <<maxk <<",";
         for (int n = 0; n < n_part[p]; ++n)
-        {
+        { 
             unsigned int i, j, k;
             i = ii[p][n];
             j = jj[p][n];
