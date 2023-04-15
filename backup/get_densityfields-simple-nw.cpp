@@ -29,52 +29,50 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
     static float zhd = posH[2] - dd[2] * 1;
     static float ddi[3] = {1.f / dd[0], 1.f / dd[1], 1.f / dd[2]};
     static float dti[2] = {1.f / dt[0], 1.f / dt[1]};
-   // static float v[2][3][n_parte];
-   // static unsigned int ii[2][3][n_parte];
+
     static auto ii = new unsigned int[2][3][n_parte];
     static auto v = new float[2][3][n_parte];
-        cout << "get_density_start\n";
+       cout << "get_density_start\n";
+// get indices. if particle is out of bounds index will be greater than number of cells .
 #pragma omp parallel num_threads(2)
     {
         int p = omp_get_thread_num();
-        int remainder = n_part[p] % nthreads;
-        int particles_per_thread = n_part[p] / nthreads;
-#pragma omp parallel num_threads(nthreads)
+#pragma omp parallel for simd num_threads(nthreads)
+        for (int n = 0; n < n_part[p]; ++n)
         {
-            int thread_id = omp_get_thread_num();
-            int start_index = thread_id * particles_per_thread;
-            int end_index = (thread_id + 1) * particles_per_thread;
-            if (thread_id == nthreads - 1)
-            {
-                end_index += remainder;
-            }
-            //          cout << "thread " << thread_id << endl;
-            for (int n = start_index; n < end_index; n++)
-            {
-                // replace out of bounds particles and reduce the number of particles.
-                if ((pos1x[p][n] <= xld) | (pos1y[p][n] <= yld) | (pos1z[p][n] <= zld) |
-                    (pos1x[p][n] >= xhd) | (pos1y[p][n] >= yhd) | (pos1z[p][n] >= zhd) |
-                    (pos0x[p][n] <= xld) | (pos0y[p][n] <= yld) | (pos0z[p][n] <= zld) |
-                    (pos0x[p][n] >= xhd) | (pos0y[p][n] >= yhd) | (pos0z[p][n] >= zhd))
-                {
-#pragma omp atomic
-                    n_part[p]--;
-                    int last = n_part[p];
-                    pos0x[p][n] = pos0x[p][last];
-                    pos0y[p][n] = pos0y[p][last];
-                    pos0z[p][n] = pos0z[p][last];
-                    pos1x[p][n] = pos1x[p][last];
-                    pos1y[p][n] = pos1y[p][last];
-                    pos1z[p][n] = pos1z[p][last];
-                    q[p][n] = q[p][last];
-                    q[p][last] = 0;
-                    n--;
-                }
-            }
+            ii[p][0][n] = (unsigned int)((pos1x[p][n] - posL[0]) * ddi[0]);
+            ii[p][1][n] = (unsigned int)((pos1y[p][n] - posL[1]) * ddi[1]);
+            ii[p][2][n] = (unsigned int)((pos1z[p][n] - posL[2]) * ddi[2]);
         }
     }
 #pragma omp barrier
-    cout << "get_density_checked out of bounds\n";
+
+#pragma omp parallel num_threads(2)
+    {
+        int p = omp_get_thread_num();
+//        #pragma omp parallel for simd num_threads(nthreads)
+        for (int n = 0; n < n_part[p]; ++n)
+        {
+            // replace out of bounds particles and reduce the number of particles.
+            if (ii[p][0][n] >= n_space_divx || ii[p][1][n] >= n_space_divy || ii[p][2][n] >= n_space_divz)
+            {
+                n_part[p]--;
+                int last = n_part[p];
+                pos0x[p][n] = pos0x[p][last];
+                pos0y[p][n] = pos0y[p][last];
+                pos0z[p][n] = pos0z[p][last];
+                pos1x[p][n] = pos1x[p][last];
+                pos1y[p][n] = pos1y[p][last];
+                pos1z[p][n] = pos1z[p][last];
+                q[p][n] = q[p][last];
+                q[p][last] = 0;
+                n--;
+            }
+        }
+    }
+
+#pragma omp barrier
+    //   cout << "get_density_checked out of bounds\n";
 #pragma omp parallel num_threads(2)
     {
         int p = omp_get_thread_num();
@@ -85,10 +83,12 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
             v[p][1][n] = (pos1y[p][n] - pos0y[p][n]) * dti[p];
             v[p][2][n] = (pos1z[p][n] - pos0z[p][n]) * dti[p];
         }
-#pragma omp parallel for simd num_threads(nthreads)
+
+//#pragma omp parallel for simd num_threads(nthreads)
         for (int n = 0; n < n_part[p]; ++n)
         {
             KEtot[p] += v[p][0][n] * v[p][0][n] + v[p][1][n] * v[p][1][n] + v[p][2][n] * v[p][2][n];
+            nt[p] += q[p][n];
         }
         KEtot[p] *= 0.5 * mp[p] / (e_charge_mass)*r_part_spart; // as if these particles were actually samples of the greater thing
 //      cout <<maxk <<",";
@@ -99,37 +99,19 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
             v[p][1][n] *= q[p][n];
             v[p][2][n] *= q[p][n];
         }
+#pragma omp barrier
 #pragma omp parallel for simd num_threads(nthreads)
         for (int n = 0; n < n_part[p]; ++n)
         {
-            ii[p][0][n] = (unsigned int)((pos1x[p][n] - posL[0]) * ddi[0]);
-            ii[p][1][n] = (unsigned int)((pos1y[p][n] - posL[1]) * ddi[1]);
-            ii[p][2][n] = (unsigned int)((pos1z[p][n] - posL[2]) * ddi[2]);
-        }
-
-#pragma omp parallel num_threads(nthreads)
-        {
-            int thread_id = omp_get_thread_num();
-            int remainder = n_part[p] % nthreads;
-            int particles_per_thread = n_part[p] / nthreads;
-            int start_index = thread_id * particles_per_thread;
-            int end_index = (thread_id + 1) * particles_per_thread;
-            if (thread_id == nthreads - 1)
-                end_index += remainder;
-            //      cout << "npp" << p << n_part[p] << endl;
-            for (int n = start_index; n < end_index; n++)
-            {
-                unsigned int i = ii[p][0][n], j = ii[p][1][n], k = ii[p][2][n];
-                np[p][k][j][i] += q[p][n];
-                nt[p] += q[p][n];
-                currentj[p][0][k][j][i] += v[p][0][n];
-                currentj[p][1][k][j][i] += v[p][1][n];
-                currentj[p][2][k][j][i] += v[p][2][n];
-            }
+            unsigned int i = ii[p][0][n], j = ii[p][1][n], k = ii[p][2][n];
+            np[p][k][j][i] += q[p][n];
+            currentj[p][0][k][j][i] += v[p][0][n];
+            currentj[p][1][k][j][i] += v[p][1][n];
+            currentj[p][2][k][j][i] += v[p][2][n];
         }
     }
+
 #pragma omp barrier
-    cout << "get_density_almost done\n";
 
 #pragma omp parallel for simd num_threads(nthreads)
     for (unsigned int i = 0; i < n_cells * 3; i++)

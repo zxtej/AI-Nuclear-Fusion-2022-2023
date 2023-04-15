@@ -32,7 +32,7 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
 
     static auto ii = new unsigned int[2][3][n_parte];
     static auto v = new float[2][3][n_parte];
-    //   cout << "get_density_start\n";
+ //   cout << "get_density_start\n";
 #pragma omp parallel num_threads(2)
     {
         int p = omp_get_thread_num();
@@ -45,7 +45,7 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
                     (pos0x[p][n] <= xld) | (pos0y[p][n] <= yld) | (pos0z[p][n] <= zld) |
                     (pos0x[p][n] >= xhd) | (pos0y[p][n] >= yhd) | (pos0z[p][n] >= zhd))
                 {
-                    // #pragma omp atomic
+#pragma omp atomic
                     n_part[p]--;
                     int last = n_part[p];
                     pos0x[p][n] = pos0x[p][last];
@@ -62,7 +62,7 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
         }
     }
 #pragma omp barrier
-    // cout << "get_density_checked out of bounds\n";
+   // cout << "get_density_checked out of bounds\n";
 #pragma omp parallel num_threads(2)
     {
         int p = omp_get_thread_num();
@@ -73,8 +73,7 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
             v[p][1][n] = (pos1y[p][n] - pos0y[p][n]) * dti[p];
             v[p][2][n] = (pos1z[p][n] - pos0z[p][n]) * dti[p];
         }
-//#pragma omp parallel for simd num_threads(nthreads)
-#pragma omp simd 
+        // #pragma omp parallel for simd num_threads(nthreads)
         for (int n = 0; n < n_part[p]; ++n)
         {
             KEtot[p] += v[p][0][n] * v[p][0][n] + v[p][1][n] * v[p][1][n] + v[p][2][n] * v[p][2][n];
@@ -109,7 +108,7 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
     }
 
 #pragma omp barrier
-    //   cout << "get_density_almost done\n";
+ //   cout << "get_density_almost done\n";
 
 #pragma omp parallel for simd num_threads(nthreads)
     for (unsigned int i = 0; i < n_cells * 3; i++)
