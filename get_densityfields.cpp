@@ -35,8 +35,8 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
     static auto v = new float[2][3][n_parte];
     auto oblist = new unsigned int[2][n_parte];
     auto iblist = new unsigned int[2][n_parte];
-    fill(reinterpret_cast<float *>(oblist), reinterpret_cast<float *>(oblist) + n_parte * 2, 0);
-    fill(reinterpret_cast<float *>(iblist), reinterpret_cast<float *>(iblist) + n_parte * 2, 0);
+    //fill(reinterpret_cast<float *>(oblist), reinterpret_cast<float *>(oblist) + n_parte * 2, 0);
+    //fill(reinterpret_cast<float *>(iblist), reinterpret_cast<float *>(iblist) + n_parte * 2, 0);
     int nob[2];
     int nib[2];
 
@@ -56,7 +56,7 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
                 nib[p] = 0;
         for (unsigned int n = 0; n < n_part[p]; ++n)
         {
-            if ((ii[p][0][n] > (n_space_divx - 2)) || (ii[p][1][n] > (n_space_divy - 2)) || (ii[p][2][n] > (n_space_divz - 2)) || (ii[p][0][n] < 2) || (ii[p][1][n] < 2) || (ii[p][2][n] < 2))
+            if ((ii[p][0][n] > (n_space_divx - 2)) || (ii[p][1][n] > (n_space_divy - 2)) || (ii[p][2][n] > (n_space_divz - 2)) || (ii[p][0][n] < 1) || (ii[p][1][n] < 1) || (ii[p][2][n] < 1))
             {
                 oblist[p][nob[p]] = n;
                 nob[p]++;
