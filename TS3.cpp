@@ -20,13 +20,13 @@ int main()
     timer.mark(); // The second is for compute_d_time
     timer.mark(); // The third is for start up dt
 
-    omp_set_num_threads(nthreads);
-
+    // omp_set_num_threads(nthreads);
+    nthreads = omp_get_max_threads();
     double t = 0;
     float Bmax = Bmax0;
     float Emax = Emax0;
     const unsigned int n_cells = n_space_divx * n_space_divy * n_space_divz;
-
+    cout << "(unsigned int) ((int)(-2.5f))" << (unsigned int)((int)(-2.5f)) << endl;
     // position of particle and velocity: stored as 2 positions at slightly different times
     /** CL: Ensure that pos0/1.. contain multiple of 64 bytes, ie. multiple of 16 floats **/
     auto *pos0x = reinterpret_cast<float(&)[2][n_partd]>(*((float *)_aligned_malloc(sizeof(float) * n_partd * 2, 4096))); // new float[2][n_partd];
@@ -37,9 +37,12 @@ int main()
     auto *pos1z = reinterpret_cast<float(&)[2][n_partd]>(*((float *)_aligned_malloc(sizeof(float) * n_partd * 2, 4096))); // new float[2][n_partd];
 
     //    charge of particles
-    auto *q = new int[2][n_partd]; // charge of each particle +1 for H,D or T or -1 for electron can also be +2 for He for example
-    auto *m = new int[2][n_partd]; // mass of of each particle not really useful unless we want to simulate many different types of particles
-
+    auto *q = static_cast<int(*)[n_partd]>(
+        _aligned_malloc(2 * n_partd * sizeof(int), alignment));
+    //    auto *q = new int[2][n_partd]; // charge of each particle +1 for H,D or T or -1 for electron can also be +2 for He for example
+    // auto *m = new int[2][n_partd]; // mass of of each particle not really useful unless we want to simulate many different types of particles
+    auto *m = static_cast<int(*)[n_partd]>(
+        _aligned_malloc(2 * n_partd * sizeof(int), alignment));
     // reduced particle position dataset for printing/plotting
     auto *posp = new float[2][n_output_part][3];
     auto *KE = new float[2][n_output_part];
@@ -49,29 +52,24 @@ int main()
     auto *Ee = new float[3][n_space_divz][n_space_divy][n_space_divx];
     float *Ea1 = (float *)_aligned_malloc(sizeof(float) * n_cells * 3 * ncoeff, 4096); // auto *Ea = new float[3][ncoeff][n_space_divz][n_space_divy][n_space_divx];
     auto *Ea = reinterpret_cast<float(&)[n_space_divz][n_space_divy][n_space_divx][3][ncoeff]>(*Ea1);
-    // auto Ex = new float[n_partd];
-    // auto Ey = new float[n_partd];
-    // auto Ez = new float[n_partd];
-    //    auto *Einterpolated= new float[(n_space_divz-1)*4+1][(n_space_divy-1)*4+1][(n_space_divx-1)*4+1][3];
-    //    auto *Vfield=new float[n_space_divz][n_space_divy][n_space_divx];
 
     auto *B = reinterpret_cast<float(&)[3][n_space_divz][n_space_divy][n_space_divx]>(*fftwf_alloc_real(3 * n_cells)); // new float[3][n_space_divz][n_space_divy][n_space_divx];
     auto *Be = new float[3][n_space_divz][n_space_divy][n_space_divx];
     float *Ba1 = (float *)_aligned_malloc(sizeof(float) * n_cells * 3 * ncoeff, 4096); // auto *Ba = new float[3][ncoeff][n_space_divz][n_space_divy][n_space_divx];
     auto *Ba = reinterpret_cast<float(&)[n_space_divz][n_space_divy][n_space_divx][3][ncoeff]>(*Ba1);
-    // auto Bx = new float[n_partd];
-    // auto By = new float[n_partd];
-    // auto Bz = new float[n_partd];
-    //     auto *Afield= new float[n_space_divz][n_space_divy][n_space_divx][3]; // x,y,z components
 
     auto *V = reinterpret_cast<float(&)[n_space_divz][n_space_divy][n_space_divx]>(*fftwf_alloc_real(n_cells));
 
-    auto *np = new float[2][n_space_divz][n_space_divy][n_space_divx];
-    auto *npt = new float[n_space_divz][n_space_divy][n_space_divx];
+    //  auto *np = new float[2][n_space_divz][n_space_divy][n_space_divx];
+
+    auto *np = static_cast<float(*)[n_space_divz][n_space_divy][n_space_divx]>(_aligned_malloc(2 * n_space_divz * n_space_divy * n_space_divx * sizeof(float), alignment));
+    auto *npt = static_cast<float(*)[n_space_divy][n_space_divx]>(_aligned_malloc(n_space_divz * n_space_divy * n_space_divx * sizeof(float), alignment));
     int nt[2] = {0, 0};
     float KEtot[2] = {0, 0};
-    auto *currentj = new float[2][3][n_space_divz][n_space_divy][n_space_divx];
-    auto *jc = new float[3][n_space_divz][n_space_divy][n_space_divx];
+    auto *currentj = static_cast<float(*)[3][n_space_divz][n_space_divy][n_space_divx]>(_aligned_malloc(2 * 3 * n_space_divz * n_space_divy * n_space_divx * sizeof(float), alignment));
+    auto *jc = static_cast<float(*)[n_space_divz][n_space_divy][n_space_divx]>(_aligned_malloc(3 * n_space_divz * n_space_divy * n_space_divx * sizeof(float), alignment));
+
+    //    auto *jc = new float[3][n_space_divz][n_space_divy][n_space_divx];
     float U[2] = {0, 0};
 
     ofstream E_file, B_file;

@@ -15,7 +15,7 @@
 #include <string>
 #include <filesystem>
 #include <CL/opencl.hpp>
-//#include <vtk/vtksys/Configure.hxx>
+// #include <vtk/vtksys/Configure.hxx>
 #include <vtk/vtkSmartPointer.h>
 #include <vtk/vtkFloatArray.h>
 #include <vtk/vtkDoubleArray.h>
@@ -47,6 +47,8 @@ const string outpath = std::filesystem::temp_directory_path().string() + "/out/"
 #else
 const string outpath = std::filesystem::temp_directory_path().string() + "out/";
 #endif
+static int nthreads;
+constexpr int alignment = 64; // 512 bits / 8 bits per byte = 64 bytes
 
 class Time
 {
@@ -140,13 +142,13 @@ void generateParticles(float a0, float r0, int *qs, int *mp, float pos0x[2][n_pa
                        float pos1x[2][n_partd], float pos1y[2][n_partd], float pos1z[2][n_partd], int q[2][n_partd], int m[2][n_partd], int *nt);
 void generateField(float Ee[3][n_space_divz][n_space_divy][n_space_divx], float Be[3][n_space_divz][n_space_divy][n_space_divx]);
 void id_to_cell(int id, int *x, int *y, int *z);
-void save_hist(int i_time, double t, int npart, float dt[2], float pos0x[2][n_partd], float pos0y[2][n_partd], float pos0z[2][n_partd], float pos1x[2][n_partd], float pos1y[2][n_partd], float pos1z[2][n_partd],int n_part[3]);
+void save_hist(int i_time, double t, int npart, float dt[2], float pos0x[2][n_partd], float pos0y[2][n_partd], float pos0z[2][n_partd], float pos1x[2][n_partd], float pos1y[2][n_partd], float pos1z[2][n_partd], int n_part[3]);
 
 void generate_rand_sphere(float a0, float pos0x[2][n_partd], float pos0y[2][n_partd], float pos0z[2][n_partd],
-                          float pos1x[2][n_partd], float pos1y[2][n_partd], float pos1z[2][n_partd], 
-                          int q[2][n_partd], int m[2][n_partd], int nt[2],float dt[2]);
-
-void generate_rand_cylinder(float a0, float pos0x[2][n_partd], float pos0y[2][n_partd], float pos0z[2][n_partd],
                           float pos1x[2][n_partd], float pos1y[2][n_partd], float pos1z[2][n_partd],
                           int q[2][n_partd], int m[2][n_partd], int nt[2], float dt[2]);
+
+void generate_rand_cylinder(float a0, float pos0x[2][n_partd], float pos0y[2][n_partd], float pos0z[2][n_partd],
+                            float pos1x[2][n_partd], float pos1y[2][n_partd], float pos1z[2][n_partd],
+                            int q[2][n_partd], int m[2][n_partd], int nt[2], float dt[2]);
 #endif // TRAJ_H_INCLUDED

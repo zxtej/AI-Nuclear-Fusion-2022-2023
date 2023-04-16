@@ -1,8 +1,8 @@
 #define RamDisk // whether to use RamDisk
 #define maxcells 32
 #define cldevice 1
-constexpr int nthreads = 8;    // match with your CPU
-
+//constexpr int nthreads = 8;    // match with your CPU
+ //   const size_t alignment = 64; // 512 bits / 8 bits per byte = 64 bytes
 #define Temp_e 1e7 // in Kelvin
 #define Temp_d 1e7 // in Kelvin
 
@@ -12,7 +12,7 @@ constexpr float Bmax0 = 100;
 constexpr float Emax0 = 1e8;
 
 constexpr float a0 = 20e-3; // typical dimensions of a cell
-constexpr float target_part = 1e14;
+constexpr float target_part = 1e10;
 
 // technical parameters
 constexpr int n_space = 64;                              // must be 2 to power of n
