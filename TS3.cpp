@@ -37,30 +37,25 @@ int main()
     auto *pos1z = reinterpret_cast<float(&)[2][n_partd]>(*((float *)_aligned_malloc(sizeof(float) * n_partd * 2, 4096))); // new float[2][n_partd];
 
     //    charge of particles
-    auto *q = static_cast<int(*)[n_partd]>(
-        _aligned_malloc(2 * n_partd * sizeof(int), alignment));
-    //    auto *q = new int[2][n_partd]; // charge of each particle +1 for H,D or T or -1 for electron can also be +2 for He for example
-    // auto *m = new int[2][n_partd]; // mass of of each particle not really useful unless we want to simulate many different types of particles
-    auto *m = static_cast<int(*)[n_partd]>(
-        _aligned_malloc(2 * n_partd * sizeof(int), alignment));
+    auto *q = static_cast<int(*)[n_partd]>(_aligned_malloc(2 * n_partd * sizeof(int), alignment));// charge of each particle +1 for H,D or T or -1 for electron can also be +2 for He for example
+    auto *m = static_cast<int(*)[n_partd]>(_aligned_malloc(2 * n_partd * sizeof(int), alignment));// mass of of each particle not really useful unless we want to simulate many different types of particles
+
     // reduced particle position dataset for printing/plotting
     auto *posp = new float[2][n_output_part][3];
     auto *KE = new float[2][n_output_part];
 
     /** CL: Ensure that Ea/Ba contain multiple of 64 bytes, ie. multiple of 16 floats **/
-    auto *E = reinterpret_cast<float(&)[3][n_space_divz][n_space_divy][n_space_divx]>(*fftwf_alloc_real(3 * n_cells)); // new float[3][n_space_divz][n_space_divy][n_space_divx];
-    auto *Ee = new float[3][n_space_divz][n_space_divy][n_space_divx];
-    float *Ea1 = (float *)_aligned_malloc(sizeof(float) * n_cells * 3 * ncoeff, 4096); // auto *Ea = new float[3][ncoeff][n_space_divz][n_space_divy][n_space_divx];
+    auto *E = reinterpret_cast<float(&)[3][n_space_divz][n_space_divy][n_space_divx]>(*fftwf_alloc_real(3 * n_cells)); //selfgenerated E field
+    auto *Ee = new float[3][n_space_divz][n_space_divy][n_space_divx];//External E field
+    float *Ea1 = (float *)_aligned_malloc(sizeof(float) * n_cells * 3 * ncoeff, 4096); // coefficients for Trilinear interpolation Electric field
     auto *Ea = reinterpret_cast<float(&)[n_space_divz][n_space_divy][n_space_divx][3][ncoeff]>(*Ea1);
 
     auto *B = reinterpret_cast<float(&)[3][n_space_divz][n_space_divy][n_space_divx]>(*fftwf_alloc_real(3 * n_cells)); // new float[3][n_space_divz][n_space_divy][n_space_divx];
     auto *Be = new float[3][n_space_divz][n_space_divy][n_space_divx];
-    float *Ba1 = (float *)_aligned_malloc(sizeof(float) * n_cells * 3 * ncoeff, 4096); // auto *Ba = new float[3][ncoeff][n_space_divz][n_space_divy][n_space_divx];
+    float *Ba1 = (float *)_aligned_malloc(sizeof(float) * n_cells * 3 * ncoeff, 4096); // coefficients for Trilinear interpolation Magnetic field
     auto *Ba = reinterpret_cast<float(&)[n_space_divz][n_space_divy][n_space_divx][3][ncoeff]>(*Ba1);
 
     auto *V = reinterpret_cast<float(&)[n_space_divz][n_space_divy][n_space_divx]>(*fftwf_alloc_real(n_cells));
-
-    //  auto *np = new float[2][n_space_divz][n_space_divy][n_space_divx];
 
     auto *np = static_cast<float(*)[n_space_divz][n_space_divy][n_space_divx]>(_aligned_malloc(2 * n_space_divz * n_space_divy * n_space_divx * sizeof(float), alignment));
     auto *npt = static_cast<float(*)[n_space_divy][n_space_divx]>(_aligned_malloc(n_space_divz * n_space_divy * n_space_divx * sizeof(float), alignment));

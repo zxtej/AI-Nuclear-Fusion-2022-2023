@@ -10,40 +10,42 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
                        float jc[3][n_space_divz][n_space_divy][n_space_divx])
 {
     // find number of particle and current density fields
-    // set fields=0 in preparation
-    unsigned int n;
-
-    fill(reinterpret_cast<float *>(currentj), reinterpret_cast<float *>(currentj) + n_cells * 6, 0.f);
-    fill(reinterpret_cast<float *>(np), reinterpret_cast<float *>(np) + n_cells * 2, 0); // Could split into threads.
 
     nt[0] = 0;
     nt[1] = 0;
     KEtot[0] = 0;
     KEtot[1] = 0;
     // set limits beyond which particle is considered as "lost"
-    static const float xld = posL[0] + dd[0] * 1;
-    static const float yld = posL[1] + dd[1] * 1;
-    static const float zld = posL[2] + dd[2] * 1;
-    static const float xhd = posH[0] - dd[0] * 1;
-    static const float yhd = posH[1] - dd[1] * 1;
-    static const float zhd = posH[2] - dd[2] * 1;
-    static const float ddi[3] = {1.f / dd[0], 1.f / dd[1], 1.f / dd[2]};
+    static const float ddi[3] = {1.f / dd[0], 1.f / dd[1], 1.f / dd[2]}; // precalculate reciprocals
     static const float dti[2] = {1.f / dt[0], 1.f / dt[1]};
 
-    static auto ii = new unsigned int[2][3][n_parte];
+    // cell indices for each particle [2][3][n_parte]
+    auto *ii = static_cast<unsigned int(*)[3][n_parte]>(_aligned_malloc(2 * 3 * n_parte * sizeof(unsigned int), alignment));
+    // particle velocity array [2][3][n_parte]
+    static auto *v = static_cast<float(*)[3][n_parte]>(_aligned_malloc(2 * 3 * n_parte * sizeof(float), alignment));
+    // particle offsets array [2][3][n_parte]
+    static auto *offset = static_cast<float(*)[3][n_parte]>(_aligned_malloc(2 * 3 * n_parte * sizeof(float), alignment));
 
-    static auto v = new float[2][3][n_parte];
-    auto oblist = new unsigned int[2][n_parte];
+    // center of charge field arrays [2-particle type][3 pos][z][y][x]
+    auto *np_center = static_cast<float(*)[3][n_space_divz][n_space_divy][n_space_divx]>(_aligned_malloc(2 * 3 * n_space_divz * n_space_divy * n_space_divx * sizeof(float), alignment));
+    // center of current field arrays [2][3-pos][3-current component][z][y][x]
+    auto *jc_center = static_cast<float(*)[3][3][n_space_divz][n_space_divy][n_space_divx]>(_aligned_malloc(2 * 3 * 3 * n_space_divz * n_space_divy * n_space_divx * sizeof(float), alignment));
+    // set fields=0 in preparation// Could split into threads.
+    fill(reinterpret_cast<float *>(currentj), reinterpret_cast<float *>(currentj) + n_cells * 2 * 3, 0.f);
+    fill(reinterpret_cast<float *>(np), reinterpret_cast<float *>(np) + n_cells * 2, 0.f);
+    fill(reinterpret_cast<float *>(jc_center), reinterpret_cast<float *>(jc_center) + n_cells * 2 * 3 * 3, 0.f);
+    fill(reinterpret_cast<float *>(np_center), reinterpret_cast<float *>(np_center) + n_cells * 3 * 2, 0.f);
+
+    auto oblist = new unsigned int[2][n_parte]; // list of out of bound particles
     auto iblist = new unsigned int[2][n_parte];
-    //fill(reinterpret_cast<float *>(oblist), reinterpret_cast<float *>(oblist) + n_parte * 2, 0);
-    //fill(reinterpret_cast<float *>(iblist), reinterpret_cast<float *>(iblist) + n_parte * 2, 0);
-    int nob[2];
-    int nib[2];
-
+    int nob[2]; // number of particles out of bounds
+    int nib[2]; // number of particles within bounds
 //   cout << "get_density_start\n";
+// remove out of bounds points and get x,y,z index of each particle
 #pragma omp parallel num_threads(2)
     {
         int p = omp_get_thread_num();
+        // get cell indices (x,y,z) a particle belongs to
 #pragma omp parallel for simd num_threads(nthreads)
         for (unsigned int n = 0; n < n_part[p]; ++n)
         {
@@ -53,7 +55,7 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
         }
 #pragma omp barrier
         nob[p] = 0;
-                nib[p] = 0;
+        nib[p] = 0;
         for (unsigned int n = 0; n < n_part[p]; ++n)
         {
             if ((ii[p][0][n] > (n_space_divx - 2)) || (ii[p][1][n] > (n_space_divy - 2)) || (ii[p][2][n] > (n_space_divz - 2)) || (ii[p][0][n] < 1) || (ii[p][1][n] < 1) || (ii[p][2][n] < 1))
@@ -67,16 +69,6 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
                 nib[p]++;
             }
         }
-//       n_part[p] -= nob[p];
-#pragma omp barrier
-  //      cout << p << ", " << n_part[p] - nob[p] << endl;
-    }
-
-#pragma omp parallel num_threads(2)
-    {
-         #define met1 1
-        int p = omp_get_thread_num();
-#ifdef met1
         for (unsigned int n = 0; n < nob[p]; ++n)
         {
             n_part[p]--;
@@ -94,44 +86,13 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
             q[p][n] = q[p][last];
             q[p][last] = 0;
         }
-#else
 
-        for (unsigned int n = 0; n < n_part[p]; ++n)
-        {
-            {
-                // replace out of bounds particles and reduce the number of particles.
-                /* if ((pos1x[p][n] <= xld) | (pos1y[p][n] <= yld) | (pos1z[p][n] <= zld) |
-                     (pos1x[p][n] >= xhd) | (pos1y[p][n] >= yhd) | (pos1z[p][n] >= zhd) |
-                     (pos0x[p][n] <= xld) | (pos0y[p][n] <= yld) | (pos0z[p][n] <= zld) |
-                     (pos0x[p][n] >= xhd) | (pos0y[p][n] >= yhd) | (pos0z[p][n] >= zhd))
-                     */
-                if ((ii[p][0][n] > (n_space_divx - 2)) || (ii[p][1][n] > (n_space_divy - 2)) || (ii[p][2][n] > (n_space_divz - 2)) || (ii[p][0][n] < 1) || (ii[p][1][n] < 1) || (ii[p][2][n] < 1))
-                {
-                    // #pragma omp atomic
-                    n_part[p]--;
-                    int last = n_part[p];
-                    pos0x[p][n] = pos0x[p][last];
-                    pos0y[p][n] = pos0y[p][last];
-                    pos0z[p][n] = pos0z[p][last];
-                    pos1x[p][n] = pos1x[p][last];
-                    pos1y[p][n] = pos1y[p][last];
-                    pos1z[p][n] = pos1z[p][last];
-                    ii[p][0][n] = ii[p][0][last];
-                    ii[p][1][n] = ii[p][1][last];
-                    ii[p][2][n] = ii[p][2][last];
-                    q[p][n] = q[p][last];
-                    q[p][last] = 0;
-                    n--;
-                }
-            }
-        }
-#endif
-#pragma omp barrier
-
-  //      cout << p << ", " << n_part[p] << endl;
+        //      cout << p << ", " << n_part[p] << endl;
+        //        cout <<p <<"number of particles out of bounds " << nob[p]<<endl;
     }
-
+#pragma omp barrier
     // cout << "get_density_checked out of bounds\n";
+
 #pragma omp parallel num_threads(2)
     {
         int p = omp_get_thread_num();
@@ -141,16 +102,19 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
             v[p][0][n] = (pos1x[p][n] - pos0x[p][n]) * dti[p];
             v[p][1][n] = (pos1y[p][n] - pos0y[p][n]) * dti[p];
             v[p][2][n] = (pos1z[p][n] - pos0z[p][n]) * dti[p];
+            offset[p][0][n] = pos1x[p][n] - ii[p][0][n];
+            offset[p][1][n] = pos1y[p][n] - ii[p][1][n];
+            offset[p][2][n] = pos1z[p][n] - ii[p][2][n];
         }
-// #pragma omp parallel for simd num_threads(nthreads)
-#pragma omp simd
+
+        // #pragma omp parallel for simd num_threads(nthreads) reduction (+: KEtot[0] ,nt[0],KEtot[1] ,nt[1] )
         for (int n = 0; n < n_part[p]; ++n)
         {
             KEtot[p] += v[p][0][n] * v[p][0][n] + v[p][1][n] * v[p][1][n] + v[p][2][n] * v[p][2][n];
             nt[p] += q[p][n];
         }
         KEtot[p] *= 0.5 * mp[p] / (e_charge_mass)*r_part_spart; // as if these particles were actually samples of the greater thing
-//      cout <<maxk <<",";
+#pragma omp barrier
 #pragma omp parallel for simd num_threads(nthreads)
         for (int n = 0; n < n_part[p]; ++n)
         {
@@ -163,16 +127,44 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
         {
             unsigned int i = ii[p][0][n], j = ii[p][1][n], k = ii[p][2][n];
             np[p][k][j][i] += q[p][n];
+            np_center[p][0][k][j][i] += q[p][n] * offset[p][0][n];
+            np_center[p][1][k][j][i] += q[p][n] * offset[p][1][n];
+            np_center[p][2][k][j][i] += q[p][n] * offset[p][2][n];
 
             currentj[p][0][k][j][i] += v[p][0][n];
+            jc_center[p][0][0][k][j][i] += v[p][0][n] * offset[p][0][n];
+            jc_center[p][1][0][k][j][i] += v[p][0][n] * offset[p][1][n];
+            jc_center[p][2][0][k][j][i] += v[p][0][n] * offset[p][2][n];
             currentj[p][1][k][j][i] += v[p][1][n];
+            jc_center[p][0][1][k][j][i] += v[p][1][n] * offset[p][0][n];
+            jc_center[p][1][1][k][j][i] += v[p][1][n] * offset[p][1][n];
+            jc_center[p][2][1][k][j][i] += v[p][1][n] * offset[p][2][n];
             currentj[p][2][k][j][i] += v[p][2][n];
+            jc_center[p][0][2][k][j][i] += v[p][2][n] * offset[p][0][n];
+            jc_center[p][1][2][k][j][i] += v[p][2][n] * offset[p][1][n];
+            jc_center[p][2][2][k][j][i] += v[p][2][n] * offset[p][2][n];
         }
     }
 
 #pragma omp barrier
     //   cout << "get_density_almost done\n";
-
+    // calculate center of charge field
+    for (int p = 0; p < 2; p++)
+        for (int c = 0; c < 3; c++)
+#pragma omp parallel for simd num_threads(nthreads)
+            for (unsigned int i = 0; i < n_cells; i++)
+            {
+                (reinterpret_cast<float *>(np_center[p][c]))[i] = (reinterpret_cast<float *>(np_center[p][c]))[i] / (reinterpret_cast<float *>(np[p]))[i];
+            }
+    // calculate center of current density field
+    for (int p = 0; p < 2; p++)
+        for (int c1 = 0; c1 < 3; c1++)
+            for (int c = 0; c < 3; c++)
+#pragma omp parallel for simd num_threads(nthreads)
+                for (unsigned int i = 0; i < n_cells; i++)
+                {
+                    (reinterpret_cast<float *>(jc_center[p][c1][c]))[i] = (reinterpret_cast<float *>(jc_center[p][c1][c]))[i] / (reinterpret_cast<float *>(currentj[p][c1]))[i];
+                }
 #pragma omp parallel for simd num_threads(nthreads)
     for (unsigned int i = 0; i < n_cells * 3; i++)
     {

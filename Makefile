@@ -6,7 +6,8 @@ IDIR = include
 #https://stackoverflow.com/questions/14492436/g-optimization-beyond-o3-ofast
 CC=g++
 #ucrt64
-CFLAGS= -I$(IDIR) -I /ucrt64/include/vtk -L /ucrt64/lib/vtk -fopenmp -fopenmp-simd -Ofast -march=native -malign-double -ftree-parallelize-loops=8 -std=c++2b 
+CFLAGS= -I$(IDIR) -I /ucrt64/include/vtk -L /ucrt64/lib/vtk -fopenmp -fopenmp-simd
+CFLAGS+= -Ofast -march=native -malign-double -ftree-parallelize-loops=8 -std=c++2b 
 CFLAGS+= -mavx -mavx2 -mfma -ffast-math -ftree-vectorize -fomit-frame-pointer
 #mingw64
 #CFLAGS= -I$(IDIR) -I /mingw64/include/vtk -L /ming64/lib/vtk -fopenmp -fopenmp-simd -Ofast -march=native -malign-double -ftree-parallelize-loops=8 -std=c++2b
