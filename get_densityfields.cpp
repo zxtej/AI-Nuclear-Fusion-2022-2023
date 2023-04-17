@@ -172,7 +172,7 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
         plan->f[i][1] = 0;
     }
         cout << "init NFFT plan" << endl;
-    nfft_init_3d(plan, n_space_divx, n_space_divy, n_space_divz, n_cells);
+   // nfft_init_3d(plan, n_space_divx, n_space_divy, n_space_divz, n_cells);
     // plan->f=(reinterpret_cast<float *>(np[0]));
 
     // plan->f[i] = (reinterpret_cast<float *>(np[0]))[i]
@@ -180,6 +180,7 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
     //  nfft_set_pts_stride(nfft, 3, x, 1, y, n_space_divx, z, n_space_divx * n_space_divz);
     // void nfft_set_pts_stride(nfft_plan plan, int dim, double* x, int xstride, double* y, int ystride, double* z, int zstride);
     //  Execute the forward NFFT transform
+            cout << " NFFT transform forward plan" << endl;
     nfft_trafo(plan);
     for (unsigned int i = 0; i < n_cells; i++)
     {
