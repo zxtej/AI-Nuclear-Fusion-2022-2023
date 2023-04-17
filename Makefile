@@ -18,7 +18,8 @@ LIBS= -lm -lgsl -lOpenCL.dll  -lgomp.dll -lnfft3 -lfftw3f_omp -lfftw3f -lfftw3
 LIBS+=-lvtkCommonCore.dll  -lvtksys.dll -lvtkIOXML.dll -lvtkCommonDataModel.dll -lvtkIOCore.dll
 #-lvtkIOLegacy.dll -lvtkCommonComputationalGeometry.dll -lvtkCommonSystem.dll
 #-lvtkGraphics.dll -lvtkFiltersGeneral.dll -lvtkImagingCore.dll -lvtkFiltersGeneric.dll -lvtkIOCore.dll -lvtkIOImage.dll 
-AFLAGS= -flto -funroll-loops -fno-signed-zeros -fno-trapping-math -D_GLIBCXX_PARALLEL -fgcse-sm -fgcse-las -Wl,--stack,4294967296
+AFLAGS= -flto -funroll-loops -fno-signed-zeros -fno-trapping-math -D_GLIBCXX_PARALLEL -fgcse-sm -fgcse-las 
+#-Wl,--stack,4294967296
 
 #CC=clang++
 #CFLAGS=-I$(IDIR) -fopenmp -fopenmp-simd -O3 -Ofast -mavx -mfma -ffast-math -ftree-vectorize -march=native -fomit-frame-pointer -malign-double -std=c++2b
