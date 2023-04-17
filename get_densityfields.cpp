@@ -1,4 +1,5 @@
 #include "include/traj.h"
+// Interpolate the value at a given point
 
 void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_divx],
                        float np[2][n_space_divz][n_space_divy][n_space_divx],
@@ -102,9 +103,9 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
             v[p][0][n] = (pos1x[p][n] - pos0x[p][n]) * dti[p];
             v[p][1][n] = (pos1y[p][n] - pos0y[p][n]) * dti[p];
             v[p][2][n] = (pos1z[p][n] - pos0z[p][n]) * dti[p];
-            offset[p][0][n] = pos1x[p][n] - ii[p][0][n];
-            offset[p][1][n] = pos1y[p][n] - ii[p][1][n];
-            offset[p][2][n] = pos1z[p][n] - ii[p][2][n];
+            offset[p][0][n] = pos1x[p][n] - ii[p][0][n] * dd[0];
+            offset[p][1][n] = pos1y[p][n] - ii[p][1][n] * dd[1];
+            offset[p][2][n] = pos1z[p][n] - ii[p][2][n] * dd[2];
         }
 
         // #pragma omp parallel for simd num_threads(nthreads) reduction (+: KEtot[0] ,nt[0],KEtot[1] ,nt[1] )
@@ -154,7 +155,7 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
 #pragma omp parallel for simd num_threads(nthreads)
             for (unsigned int i = 0; i < n_cells; i++)
             {
-                (reinterpret_cast<float *>(np_center[p][c]))[i] = (reinterpret_cast<float *>(np_center[p][c]))[i] / (reinterpret_cast<float *>(np[p]))[i];
+                (reinterpret_cast<float *>(np_center[p][c]))[i] /= ((reinterpret_cast<float *>(np[p]))[i];
             }
     // calculate center of current density field
     for (int p = 0; p < 2; p++)
@@ -163,8 +164,9 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
 #pragma omp parallel for simd num_threads(nthreads)
                 for (unsigned int i = 0; i < n_cells; i++)
                 {
-                    (reinterpret_cast<float *>(jc_center[p][c1][c]))[i] = (reinterpret_cast<float *>(jc_center[p][c1][c]))[i] / (reinterpret_cast<float *>(currentj[p][c1]))[i];
+                    (reinterpret_cast<float *>(jc_center[p][c1][c]))[i] /= (reinterpret_cast<float *>(currentj[p][c]))[i];
                 }
+// turn into fractions that leak into the  surroundings incorporate a smoothing function 6 nearest neighbour +16=(1+1)*4 or + 9*6 +
 #pragma omp parallel for simd num_threads(nthreads)
     for (unsigned int i = 0; i < n_cells * 3; i++)
     {
