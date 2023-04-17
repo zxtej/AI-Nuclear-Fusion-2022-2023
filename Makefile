@@ -10,7 +10,7 @@ CFLAGS= -I$(IDIR) -I /ucrt64/include/vtk -L /ucrt64/lib/vtk -fopenmp -fopenmp-si
 CFLAGS+= -Ofast -march=native -malign-double -ftree-parallelize-loops=8 -std=c++2b 
 CFLAGS+= -mavx -mavx2 -mfma -ffast-math -ftree-vectorize -fomit-frame-pointer
 #mingw64
-#CFLAGS= -I$(IDIR) -I /mingw64/include/vtk -L /ming64/lib/vtk -fopenmp -fopenmp-simd -Ofast -march=native -malign-double -ftree-parallelize-loops=8 -std=c++2b
+#CFLAGS= -I$(IDIR) -I /mingw64/include/vtk -L /mingw64/lib/vtk -fopenmp -fopenmp-simd -Ofast -march=native -malign-double -ftree-parallelize-loops=8 -std=c++2b
 #CFLAGS= -I$(IDIR) -fopenmp -fopenmp-simd -Ofast -march=native -malign-double -ftree-parallelize-loops=8 -std=c++2b
 
 #LIBS= -lm -lgsl -lOpenCL.dll -lfftw3f -lomp.dll -lfftw3f_omp
