@@ -1,0 +1,14 @@
+{
+    "files.associations": {
+        "atomic": "cpp",
+        "new": "cpp",
+        "ostream": "cpp"
+    },
+    "makefile.launchConfigurations": [
+        {
+            "cwd": "c:\\Users\\pckle\\AI-Nuclear-Fusion-2022-2023",
+            "binaryPath": "c:\\Users\\pckle\\AI-Nuclear-Fusion-2022-2023\\TS3",
+            "binaryArgs": []
+        }
+    ]
+}
