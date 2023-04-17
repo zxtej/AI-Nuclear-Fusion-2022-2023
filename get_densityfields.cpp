@@ -155,7 +155,7 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
 #pragma omp parallel for simd num_threads(nthreads)
             for (unsigned int i = 0; i < n_cells; i++)
             {
-                (reinterpret_cast<float *>(np_center[p][c]))[i] /= ((reinterpret_cast<float *>(np[p]))[i];
+                (reinterpret_cast<float *>(np_center[p][c]))[i] /= (reinterpret_cast<float *>(np[p]))[i];
             }
 
     // Allocate memory for the output grid
@@ -216,11 +216,6 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
                 {
                     (reinterpret_cast<float *>(jc_center[p][c1][c]))[i] /= (reinterpret_cast<float *>(currentj[p][c]))[i];
                 }
-<<<<<<< HEAD
-// turn into fractions that leak into the  surroundings incorporate a smoothing function 6 nearest neighbour +16=(1+1)*4 or + 9*6 +
-=======
-
->>>>>>> ccc5dc1e4876af7c4b1cdd6aa148e8913c30a89e
 #pragma omp parallel for simd num_threads(nthreads)
     for (unsigned int i = 0; i < n_cells * 3; i++)
     {
