@@ -31,7 +31,9 @@
 #include <vtk/vtkImageData.h>
 #include <vtk/vtkPointData.h>
 #include <complex>
+//#include <infft.h>
 
+#include <nfft3.h>
 #include <fftw3.h>
 
 using namespace std;
