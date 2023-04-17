@@ -164,23 +164,27 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
     auto *output = new fftw_complex[n_cells];
     cout << "define NFFT plan" << endl;
     // Define the NFFT plan
-     cout << "fill NFFT plan array with values" << endl;
+
     nfft_plan *plan;
-        for (unsigned int i = 0; i < n_cells; i++)
+
+//Memory allocation is completely done by the init routine.
+    cout << "init NFFT plan" << endl;
+    nfft_init_3d(plan, n_space_divx, n_space_divy, n_space_divz, n_cells);
+
+    //  Set the non-equispaced grid points with n1*n2*n3 offsets
+    //  nfft_set_pts_stride(nfft, 3, x, 1, y, n_space_divx, z, n_space_divx * n_space_divz);
+
+    // void nfft_set_pts_stride(nfft_plan plan, int dim, double* x, int xstride, double* y, int ystride, double* z, int zstride);
+    cout << "fill NFFT plan array with values" << endl;
+    for (unsigned int i = 0; i < n_cells; i++)
     {
         plan->f[i][0] = (reinterpret_cast<float *>(np[0]))[i];
         plan->f[i][1] = 0;
+        cout << i;
     }
-        cout << "init NFFT plan" << endl;
-   // nfft_init_3d(plan, n_space_divx, n_space_divy, n_space_divz, n_cells);
-    // plan->f=(reinterpret_cast<float *>(np[0]));
 
-    // plan->f[i] = (reinterpret_cast<float *>(np[0]))[i]
-    //  Set the non-equispaced grid points with n1*n2*n3 offsets
-    //  nfft_set_pts_stride(nfft, 3, x, 1, y, n_space_divx, z, n_space_divx * n_space_divz);
-    // void nfft_set_pts_stride(nfft_plan plan, int dim, double* x, int xstride, double* y, int ystride, double* z, int zstride);
     //  Execute the forward NFFT transform
-            cout << " NFFT transform forward plan" << endl;
+    cout << " NFFT transform forward plan" << endl;
     nfft_trafo(plan);
     for (unsigned int i = 0; i < n_cells; i++)
     {
