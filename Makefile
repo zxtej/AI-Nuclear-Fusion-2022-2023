@@ -14,7 +14,7 @@ CFLAGS+= -mavx -mavx2 -mfma -ffast-math -ftree-vectorize -fomit-frame-pointer
 #CFLAGS= -I$(IDIR) -fopenmp -fopenmp-simd -Ofast -march=native -malign-double -ftree-parallelize-loops=8 -std=c++2b
 
 #LIBS= -lm -lgsl -lOpenCL.dll -lfftw3f -lomp.dll -lfftw3f_omp
-LIBS= -lm -lgsl -lOpenCL.dll  -lgomp.dll -lfftw3f_omp -lfftw3f  
+LIBS= -lm -lgsl -lOpenCL.dll  -lgomp.dll -lnfft3 -lfftw3f_omp -lfftw3f -lfftw3   
 LIBS+=-lvtkCommonCore.dll  -lvtksys.dll -lvtkIOXML.dll -lvtkCommonDataModel.dll -lvtkIOCore.dll
 #-lvtkIOLegacy.dll -lvtkCommonComputationalGeometry.dll -lvtkCommonSystem.dll
 #-lvtkGraphics.dll -lvtkFiltersGeneral.dll -lvtkImagingCore.dll -lvtkFiltersGeneric.dll -lvtkIOCore.dll -lvtkIOImage.dll 

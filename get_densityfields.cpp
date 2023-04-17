@@ -156,6 +156,46 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
             {
                 (reinterpret_cast<float *>(np_center[p][c]))[i] = (reinterpret_cast<float *>(np_center[p][c]))[i] / (reinterpret_cast<float *>(np[p]))[i];
             }
+
+//            NFFT_DEFINE_API(float, float, float, nfft_cfloat);
+    // Allocate memory for the output grid
+    float* output = new float[n_cells];
+
+    // Define the NFFT plan
+//    nfft_plan nfft_plan(int, const int*, nfft_transform_type, size_t, nfft_flags);
+
+NFFT_INT size[] = {n_space_divx, n_space_divy, n_space_divz};
+size_t M = n_cells; // number of equispaced grid points
+
+nfft_plan *plan;
+nfft_init_3d(plan, n_space_divx, n_space_divy, n_space_divz, M);
+    // Set the non-equispaced grid points with n1*n2*n3 offsets
+  //  nfft_set_pts_stride(nfft, 3, x, 1, y, n_space_divx, z, n_space_divx * n_space_divz);
+//void nfft_set_pts_stride(nfft_plan plan, int dim, double* x, int xstride, double* y, int ystride, double* z, int zstride);
+    // Execute the forward NFFT transform
+    nfft_trafo(plan);
+
+    // Define the FFTW plan for inverse FFT
+    fftw_plan ifft = fftw_plan_dft_3d(n_space_divx, n_space_divy, n_space_divz, reinterpret_cast<fftw_complex*>(output),
+                                      reinterpret_cast<fftw_complex*>(output),
+                                      FFTW_BACKWARD, FFTW_ESTIMATE);
+
+    // Execute the inverse FFT
+    fftw_execute(ifft);
+
+    // Print out the equispaced grid values
+    for (int i = 0; i < n_space_divx; i+=8) {
+        for (int j = 0; j < n_space_divy; j+=8) {
+            for (int k = 0; k < n_space_divz; k+=8) {
+                std::cout << output[i * n_space_divy * n_space_divz + j * n_space_divz + k] << " ";
+            }
+            std::cout << std::endl;
+        }
+        std::cout << std::endl;
+    }
+    nfft_finalize(plan);
+    fftw_destroy_plan(ifft);
+
     // calculate center of current density field
     for (int p = 0; p < 2; p++)
         for (int c1 = 0; c1 < 3; c1++)
@@ -165,6 +205,7 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
                 {
                     (reinterpret_cast<float *>(jc_center[p][c1][c]))[i] = (reinterpret_cast<float *>(jc_center[p][c1][c]))[i] / (reinterpret_cast<float *>(currentj[p][c1]))[i];
                 }
+
 #pragma omp parallel for simd num_threads(nthreads)
     for (unsigned int i = 0; i < n_cells * 3; i++)
     {
