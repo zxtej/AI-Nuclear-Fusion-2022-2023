@@ -164,14 +164,17 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
     auto *output = new fftw_complex[n_cells];
     cout << "define NFFT plan" << endl;
     // Define the NFFT plan
+     cout << "fill NFFT plan array with values" << endl;
     nfft_plan *plan;
-    nfft_init_3d(plan, n_space_divx, n_space_divy, n_space_divz, n_cells);
-    // plan->f=(reinterpret_cast<float *>(np[0]));
-    for (unsigned int i = 0; i < n_cells; i++)
+        for (unsigned int i = 0; i < n_cells; i++)
     {
         plan->f[i][0] = (reinterpret_cast<float *>(np[0]))[i];
         plan->f[i][1] = 0;
     }
+        cout << "init NFFT plan" << endl;
+    nfft_init_3d(plan, n_space_divx, n_space_divy, n_space_divz, n_cells);
+    // plan->f=(reinterpret_cast<float *>(np[0]));
+
     // plan->f[i] = (reinterpret_cast<float *>(np[0]))[i]
     //  Set the non-equispaced grid points with n1*n2*n3 offsets
     //  nfft_set_pts_stride(nfft, 3, x, 1, y, n_space_divx, z, n_space_divx * n_space_divz);
