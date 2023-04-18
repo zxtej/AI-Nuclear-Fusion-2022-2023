@@ -164,30 +164,41 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
     cout << "define NFFT plan" << endl;
     // Define the NFFT plan
     nfft_plan *plan;
+    cout << "init NFFT plan" << endl;
+
     nfft_init_3d(plan, n_space_divx, n_space_divy, n_space_divz, n_cells);
-    // plan->f=(reinterpret_cast<float *>(np[0]));
+    cout << "copy the forward input density to complex " << endl;
     for (unsigned int i = 0; i < n_cells; i++)
-    {
+    { cout<<i;
         plan->f[i][0] = (reinterpret_cast<float *>(np[0]))[i];
         plan->f[i][1] = 0;
     }
+    //    plan->index_x;
     // plan->f[i] = (reinterpret_cast<float *>(np[0]))[i]
     //  Set the non-equispaced grid points with n1*n2*n3 offsets
     //  nfft_set_pts_stride(nfft, 3, x, 1, y, n_space_divx, z, n_space_divx * n_space_divz);
     // void nfft_set_pts_stride(nfft_plan plan, int dim, double* x, int xstride, double* y, int ystride, double* z, int zstride);
     //  Execute the forward NFFT transform
+    cout << "execute the forward NFFT plan" << endl;
+
     nfft_trafo(plan);
+    cout << "copy the forward output " << endl;
+
     for (unsigned int i = 0; i < n_cells; i++)
     {
-        output[i][0] = plan->f[i][0];
-        output[i][1] = plan->f[i][1];
+        output[i][0] = plan->f_hat[i][0];
+        output[i][1] = plan->f_hat[i][1];
     }
     // Define the FFTW plan for inverse FFT
+    cout << "define FFTW plan" << endl;
+
     fftw_plan ifft = fftw_plan_dft_3d(n_space_divx, n_space_divy, n_space_divz, reinterpret_cast<fftw_complex *>(output),
                                       reinterpret_cast<fftw_complex *>(output),
                                       FFTW_BACKWARD, FFTW_ESTIMATE);
 
     // Execute the inverse FFT
+    cout << "execute the inverse FFTW plan" << endl;
+
     fftw_execute(ifft);
 
     // Print out the equispaced grid values
