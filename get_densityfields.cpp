@@ -1,4 +1,5 @@
 #include "include/traj.h"
+// Interpolate the value at a given point
 
 void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_divx],
                        float np[2][n_space_divz][n_space_divy][n_space_divx],
@@ -102,9 +103,9 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
             v[p][0][n] = (pos1x[p][n] - pos0x[p][n]) * dti[p];
             v[p][1][n] = (pos1y[p][n] - pos0y[p][n]) * dti[p];
             v[p][2][n] = (pos1z[p][n] - pos0z[p][n]) * dti[p];
-            offset[p][0][n] = pos1x[p][n] - ii[p][0][n];
-            offset[p][1][n] = pos1y[p][n] - ii[p][1][n];
-            offset[p][2][n] = pos1z[p][n] - ii[p][2][n];
+            offset[p][0][n] = pos1x[p][n] - ii[p][0][n] * dd[0];
+            offset[p][1][n] = pos1y[p][n] - ii[p][1][n] * dd[1];
+            offset[p][2][n] = pos1z[p][n] - ii[p][2][n] * dd[2];
         }
 
         // #pragma omp parallel for simd num_threads(nthreads) reduction (+: KEtot[0] ,nt[0],KEtot[1] ,nt[1] )
@@ -154,7 +155,7 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
 #pragma omp parallel for simd num_threads(nthreads)
             for (unsigned int i = 0; i < n_cells; i++)
             {
-                (reinterpret_cast<float *>(np_center[p][c]))[i] = (reinterpret_cast<float *>(np_center[p][c]))[i] / (reinterpret_cast<float *>(np[p]))[i];
+                (reinterpret_cast<float *>(np_center[p][c]))[i] /= (reinterpret_cast<float *>(np[p]))[i];
             }
 
     // Allocate memory for the output grid
@@ -163,24 +164,27 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
     auto *output = new fftw_complex[n_cells];
     cout << "define NFFT plan" << endl;
     // Define the NFFT plan
-    nfft_plan *plan;
-    cout << "init NFFT plan" << endl;
 
-    nfft_init_3d(plan, n_space_divx, n_space_divy, n_space_divz, n_cells);
-    cout << "copy the forward input density to complex " << endl;
+    nfft_plan *plan;
+
+//Memory allocation is completely done by the init routine.
+    cout << "init NFFT plan" << endl;
+    nfft_init_3d(plan, n_space_divx, n_space_divy, n_space_divz, n_cells*2);
+
+    //  Set the non-equispaced grid points with n1*n2*n3 offsets
+    //  nfft_set_pts_stride(nfft, 3, x, 1, y, n_space_divx, z, n_space_divx * n_space_divz);
+
+    // void nfft_set_pts_stride(nfft_plan plan, int dim, double* x, int xstride, double* y, int ystride, double* z, int zstride);
+    cout << "fill NFFT plan array with values" << endl;
     for (unsigned int i = 0; i < n_cells; i++)
     { cout<<i;
         plan->f[i][0] = (reinterpret_cast<float *>(np[0]))[i];
         plan->f[i][1] = 0;
+        cout << i;
     }
-    //    plan->index_x;
-    // plan->f[i] = (reinterpret_cast<float *>(np[0]))[i]
-    //  Set the non-equispaced grid points with n1*n2*n3 offsets
-    //  nfft_set_pts_stride(nfft, 3, x, 1, y, n_space_divx, z, n_space_divx * n_space_divz);
-    // void nfft_set_pts_stride(nfft_plan plan, int dim, double* x, int xstride, double* y, int ystride, double* z, int zstride);
-    //  Execute the forward NFFT transform
-    cout << "execute the forward NFFT plan" << endl;
 
+    //  Execute the forward NFFT transform
+    cout << " NFFT transform forward plan" << endl;
     nfft_trafo(plan);
     cout << "copy the forward output " << endl;
 
@@ -224,9 +228,8 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
 #pragma omp parallel for simd num_threads(nthreads)
                 for (unsigned int i = 0; i < n_cells; i++)
                 {
-                    (reinterpret_cast<float *>(jc_center[p][c1][c]))[i] = (reinterpret_cast<float *>(jc_center[p][c1][c]))[i] / (reinterpret_cast<float *>(currentj[p][c1]))[i];
+                    (reinterpret_cast<float *>(jc_center[p][c1][c]))[i] /= (reinterpret_cast<float *>(currentj[p][c]))[i];
                 }
-
 #pragma omp parallel for simd num_threads(nthreads)
     for (unsigned int i = 0; i < n_cells * 3; i++)
     {

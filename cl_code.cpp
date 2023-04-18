@@ -2,20 +2,23 @@
 #include <string>
 #include <fstream>
 #include <streambuf>
- cl::Context context_g;
- cl::Device default_device_g;
- cl::Program program_g;
+cl::Context context_g;
+cl::Device default_device_g;
+cl::Program program_g;
 
 stringstream cl_build_options;
-void add_build_option(string name, string param){
+void add_build_option(string name, string param)
+{
     cl_build_options << "-D" << name << "=" << param << " ";
 }
 void add_build_option(string name, int param) { add_build_option(name, to_string(param)); }
-void add_build_option(string name, float param) {
-        cl_build_options << "-D" << name << "=" << param << "f ";
+void add_build_option(string name, float param)
+{
+    cl_build_options << "-D" << name << "=" << param << "f ";
 }
 
-void cl_set_build_options(float posL[3], float posH[3], float dd[3]){
+void cl_set_build_options(float posL[3], float posH[3], float dd[3])
+{
     add_build_option("XLOW", posL[0]);
     add_build_option("YLOW", posL[1]);
     add_build_option("ZLOW", posL[2]);
@@ -28,24 +31,18 @@ void cl_set_build_options(float posL[3], float posH[3], float dd[3]){
     add_build_option("NX", n_space_divx);
     add_build_option("NY", n_space_divy);
     add_build_option("NZ", n_space_divz);
-    //add_build_option("NC", n_cells);
+    // add_build_option("NC", n_cells);
 }
-//void cl_start(cl::Context &context1, cl::Device &default_device1, cl::Program &program1)
+// void cl_start(cl::Context &context1, cl::Device &default_device1, cl::Program &program1)
 void cl_start()
 {
     int AA[1] = {-1};
 #pragma omp target
-    {
-        AA[0] = omp_is_initial_device();
-    }
+    AA[0] = omp_is_initial_device();
     if (!AA[0])
-    {
         cout << "Able to use GPU offloading with OMP!\n";
-    }
     else
-    {
         cout << "\nNo GPU on OMP\n";
-    }
     // get all platforms (drivers)
     cl::vector<cl::Platform> platforms;
     cl::Platform::get(&platforms);
@@ -89,7 +86,14 @@ void cl_start()
     cl::Platform default_platform = platforms[0];
     std::cout << "Using platform: " << default_platform.getInfo<CL_PLATFORM_NAME>() << "\n";
     default_platform.getDevices(CL_DEVICE_TYPE_ALL, &devices);
-    cl::Device default_device = devices[cldevice];
+      cl::Device default_device;
+    if (device_id >= cldevice)
+        default_device = devices[cldevice];
+    else
+    {
+        default_device = devices[device_id];
+        cout << "device_id =" << device_id << endl;
+    }
     std::cout << "\t\tDevice Name: " << default_device.getInfo<CL_DEVICE_NAME>() << "\n";
     std::cout << "OpenCL Version: " << default_device.getInfo<CL_DEVICE_VERSION>() << std::endl;
 
@@ -105,17 +109,17 @@ void cl_start()
     sources.push_back({kernel_code.c_str(), kernel_code.length()});
 
     cl::Program program(context, sources);
-    //cout << cl_build_options.str() << endl;
-    //exit(0);
-    cl_int cl_err=program.build({default_device}, cl_build_options.str().c_str()); 
+    // cout << cl_build_options.str() << endl;
+    // exit(0);
+    cl_int cl_err = program.build({default_device}, cl_build_options.str().c_str());
     std::cout << "building: " << program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(default_device) << "\n";
-    if (cl_err!= CL_SUCCESS)
+    if (cl_err != CL_SUCCESS)
     {
         std::cout << " Error building: " << program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(default_device) << "\n";
         exit(1);
     }
 
     context_g = context;
-    default_device_g=  default_device;
-    program_g= program;
+    default_device_g = default_device;
+    program_g = program;
 }
