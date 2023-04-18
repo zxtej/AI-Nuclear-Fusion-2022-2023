@@ -157,19 +157,18 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
             {
                 (reinterpret_cast<float *>(np_center[p][c]))[i] /= (reinterpret_cast<float *>(np[p]))[i];
             }
-
+#pragma omp barrier
     // Allocate memory for the output grid
     cout << "allocate memory for output grid" << endl;
+    auto *output = new fftwf_complex[n_cells];
 
-    auto *output = new fftw_complex[n_cells];
-    cout << "define NFFT plan" << endl;
     // Define the NFFT plan
-
+    cout << "define NFFT plan" << endl;
     nfftf_plan *plan;
 
 //Memory allocation is completely done by the init routine.
     cout << "init NFFT plan" << endl;
-    nfft_init_3d(plan, n_space_divx, n_space_divy, n_space_divz, n_cells);
+    nfftf_init_3d(plan, n_space_divx, n_space_divy, n_space_divz, n_cells);
 
     //  Set the non-equispaced grid points with n1*n2*n3 offsets
     //  nfft_set_pts_stride(nfft, 3, x, 1, y, n_space_divx, z, n_space_divx * n_space_divz);
@@ -185,7 +184,7 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
 
     //  Execute the forward NFFT transform
     cout << " NFFT transform forward plan" << endl;
-    nfft_trafo(plan);
+    nfftf_trafo(plan);
     cout << "copy the forward output " << endl;
 
     for (unsigned int i = 0; i < n_cells; i++)
@@ -196,14 +195,14 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
     // Define the FFTW plan for inverse FFT
     cout << "define FFTW plan" << endl;
 
-    fftw_plan ifft = fftw_plan_dft_3d(n_space_divx, n_space_divy, n_space_divz, reinterpret_cast<fftw_complex *>(output),
-                                      reinterpret_cast<fftw_complex *>(output),
+    fftwf_plan ifft = fftwf_plan_dft_3d(n_space_divx, n_space_divy, n_space_divz, reinterpret_cast<fftwf_complex *>(output),
+                                      reinterpret_cast<fftwf_complex *>(output),
                                       FFTW_BACKWARD, FFTW_ESTIMATE);
 
     // Execute the inverse FFT
     cout << "execute the inverse FFTW plan" << endl;
 
-    fftw_execute(ifft);
+    fftwf_execute(ifft);
 
     // Print out the equispaced grid values
     for (int i = 0; i < n_space_divx; i += 8)
@@ -218,8 +217,8 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
         }
         std::cout << std::endl;
     }
-    nfft_finalize(plan);
-    fftw_destroy_plan(ifft);
+    nfftf_finalize(plan);
+    fftwf_destroy_plan(ifft);
 
     // calculate center of current density field
     for (int p = 0; p < 2; p++)

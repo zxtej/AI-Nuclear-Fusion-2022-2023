@@ -1,6 +1,6 @@
 //#define RamDisk // whether to use RamDisk
 #define maxcells 32
-#define cldevice 0
+#define cldevice 1
 //constexpr int nthreads = 8;    // match with your CPU
  //   const size_t alignment = 64; // 512 bits / 8 bits per byte = 64 bytes
 #define Temp_e 1e7 // in Kelvin

@@ -48,12 +48,13 @@ void cl_start()
     cl::Platform::get(&platforms);
     cl::vector<cl::Device> devices;
     int platform_id = 0;
-    int device_id = 0;
+    int device_id;
 
     std::cout << "Number of Platforms: " << platforms.size() << std::endl;
 
     for (cl::vector<cl::Platform>::iterator it = platforms.begin(); it != platforms.end(); ++it)
     {
+        device_id = 0;
         cl::Platform platform(*it);
 
         std::cout << "Platform ID: " << platform_id++ << std::endl;
@@ -61,7 +62,7 @@ void cl_start()
         std::cout << "Platform Vendor: " << platform.getInfo<CL_PLATFORM_VENDOR>() << std::endl;
 
         //     platform.getDevices(CL_DEVICE_TYPE_GPU | CL_DEVICE_TYPE_CPU, &devices);
-        platform.getDevices(CL_DEVICE_TYPE_ALL, &devices);
+        platform.getDevices(CL_DEVICE_TYPE_GPU, &devices);
         //       platform.getDevices(CL_DEVICE_TYPE_GPU, &devices);
         for (cl::vector<cl::Device>::iterator it2 = devices.begin(); it2 != devices.end(); ++it2)
         {
@@ -86,7 +87,8 @@ void cl_start()
     cl::Platform default_platform = platforms[0];
     std::cout << "Using platform: " << default_platform.getInfo<CL_PLATFORM_NAME>() << "\n";
     default_platform.getDevices(CL_DEVICE_TYPE_ALL, &devices);
-      cl::Device default_device;
+    cl::Device default_device;
+    cout << "device_id =" << device_id << endl;
     if (device_id >= cldevice)
         default_device = devices[cldevice];
     else
