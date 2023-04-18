@@ -232,20 +232,25 @@ for (int i = 0; i < n_space_divx; i += 4)
 */
     //  Execute the forward NFFT transform
     cout << " NFFT transform forward plan" << endl;
-    nfftf_trafo(&plan);
+   // nfftf_adjoint_3d(&plan);
+   nfftf_trafo_3d(&plan);
     cout << "copy the forward output " << endl;
-    for (int i = 0; i < n_space_divx; i += 4)
+    for (int i = 0; i < n_space_divx; i += 1)
     {
         for (int j = 0; j < n_space_divy; j += 4)
         {
             for (int k = 0; k < n_space_divz; k += 4)
             {
-                std::cout << plan.f_hat[i * n_space_divy * n_space_divz + j * n_space_divz + k][0] << " ";
+                int n = i * n_space_divy * n_space_divz + j * n_space_divz + k;
+                if (plan.f[n][0])
+                    std::cout << "f " << i << "," << j << "," << k << "," << plan.f[n][0] << " ";
+                if (plan.f_hat[n][0])
+                    std::cout << "f_hat " << i << "," << j << "," << k << "," << plan.f_hat[n][0] << " ";
                 // std::cout << plan.x[(i * n_space_divy * n_space_divz + j * n_space_divz + k)*3] << " ";
             }
-            std::cout << std::endl;
+            //   std::cout << std::endl;
         }
-        std::cout << std::endl;
+        //  std::cout << std::endl;
     }
     for (unsigned int i = 0; i < n_cells; i++)
     {

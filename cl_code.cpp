@@ -111,16 +111,18 @@ void cl_start()
     sources.push_back({kernel_code.c_str(), kernel_code.length()});
 
     cl::Program program(context, sources);
-    // cout << cl_build_options.str() << endl;
-    // exit(0);
+
     cl_int cl_err = program.build({default_device}, cl_build_options.str().c_str());
     std::cout << "building: " << program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(default_device) << "\n";
     if (cl_err != CL_SUCCESS)
     {
-        std::cout << " Error building: " << program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(default_device) << "\n";
+        std::cout << " Error building: " << program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(default_device);
+        cout << "\n"
+             << cl_build_options.str() << endl;
         exit(1);
     }
-
+    else
+        cout << " success " << endl;
     context_g = context;
     default_device_g = default_device;
     program_g = program;
