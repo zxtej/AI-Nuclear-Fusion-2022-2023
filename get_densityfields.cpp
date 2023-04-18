@@ -165,11 +165,11 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
     cout << "define NFFT plan" << endl;
     // Define the NFFT plan
 
-    nfft_plan *plan;
+    nfftf_plan *plan;
 
 //Memory allocation is completely done by the init routine.
     cout << "init NFFT plan" << endl;
-    nfft_init_3d(plan, n_space_divx, n_space_divy, n_space_divz, n_cells*2);
+    nfft_init_3d(plan, n_space_divx, n_space_divy, n_space_divz, n_cells);
 
     //  Set the non-equispaced grid points with n1*n2*n3 offsets
     //  nfft_set_pts_stride(nfft, 3, x, 1, y, n_space_divx, z, n_space_divx * n_space_divz);
