@@ -103,9 +103,11 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
             v[p][0][n] = (pos1x[p][n] - pos0x[p][n]) * dti[p];
             v[p][1][n] = (pos1y[p][n] - pos0y[p][n]) * dti[p];
             v[p][2][n] = (pos1z[p][n] - pos0z[p][n]) * dti[p];
-            offset[p][0][n] = pos1x[p][n] - ii[p][0][n] * dd[0];
-            offset[p][1][n] = pos1y[p][n] - ii[p][1][n] * dd[1];
-            offset[p][2][n] = pos1z[p][n] - ii[p][2][n] * dd[2];
+            offset[p][0][n] = pos1x[p][n] * ddi[0] - (float)((int)ii[p][0][n] - n_space_divx / 2 - 1);
+            offset[p][1][n] = pos1y[p][n] * ddi[1] - (float)((int)ii[p][1][n] - n_space_divy / 2 - 1);
+            offset[p][2][n] = pos1z[p][n] * ddi[2] - (float)((int)ii[p][2][n] - n_space_divz / 2 - 1);
+            if (p == 0)
+                cout << offset[p][0][n] << ", " << pos1x[p][n] << ", " << ddi[0] << ", " << (float)ii[p][0][n] << endl;
         }
 
         // #pragma omp parallel for simd num_threads(nthreads) reduction (+: KEtot[0] ,nt[0],KEtot[1] ,nt[1] )
@@ -150,54 +152,100 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
 #pragma omp barrier
     cout << "get_density_almost done\n";
     // calculate center of charge field
+    for (int c = 0; c < 3; c++)
+        cout << ddi[c] << ", ";
+    cout << endl;
+
+    cout << "calculate center of charge field" << endl;
     for (int p = 0; p < 2; p++)
         for (int c = 0; c < 3; c++)
-#pragma omp parallel for simd num_threads(nthreads)
+            // #pragma omp parallel for simd num_threads(nthreads)
             for (unsigned int i = 0; i < n_cells; i++)
             {
-                (reinterpret_cast<float *>(np_center[p][c]))[i] /= (reinterpret_cast<float *>(np[p]))[i];
+                if ((reinterpret_cast<float *>(np[p]))[i])
+                {
+                    //                 cout << (reinterpret_cast<float *>(np_center[p][c]))[i] << ", " << ((reinterpret_cast<float *>(np[p]))[i]) << ", ";
+                    (reinterpret_cast<float *>(np_center[p][c]))[i] = (reinterpret_cast<float *>(np_center[p][c]))[i] / (((reinterpret_cast<float *>(np[p]))[i]) + 1.0e-8f) - 0.5f;
+                    //                   cout << (reinterpret_cast<float *>(np_center[p][c]))[i] << endl;
+                }
+                else
+                    (reinterpret_cast<float *>(np_center[p][c]))[i] = (reinterpret_cast<float *>(np_center[p][c]))[i] / (((reinterpret_cast<float *>(np[p]))[i]) + 1.0e-8f) - 0.5f;
             }
+
+    // Print out the center of charge  grid values
+    for (int i = 0; i < n_space_divx; i += 8)
+    {
+        for (int j = 0; j < n_space_divy; j += 8)
+        {
+            for (int k = 0; k < n_space_divz; k += 8)
+            {
+                std::cout << (reinterpret_cast<float *>(np_center[0][1]))[i * n_space_divy * n_space_divz + j * n_space_divz + k] << " ";
+            }
+            std::cout << std::endl;
+        }
+        std::cout << std::endl;
+    }
+
 #pragma omp barrier
+
     // Allocate memory for the output grid
     cout << "allocate memory for output grid" << endl;
     auto *output = new fftwf_complex[n_cells];
 
     // Define the NFFT plan
     cout << "define NFFT plan" << endl;
-    nfftf_plan *plan;
+    nfftf_plan plan;
 
-//Memory allocation is completely done by the init routine.
+    // Memory allocation is completely done by the init routine.
     cout << "init NFFT plan" << endl;
-    nfftf_init_3d(plan, n_space_divx, n_space_divy, n_space_divz, n_cells);
+    nfftf_init_3d(&plan, n_space_divx, n_space_divy, n_space_divz, n_cells);
 
-    //  Set the non-equispaced grid points with n1*n2*n3 offsets
-    //  nfft_set_pts_stride(nfft, 3, x, 1, y, n_space_divx, z, n_space_divx * n_space_divz);
-
-    // void nfft_set_pts_stride(nfft_plan plan, int dim, double* x, int xstride, double* y, int ystride, double* z, int zstride);
     cout << "fill NFFT plan array with values" << endl;
     for (unsigned int i = 0; i < n_cells; i++)
-    { cout<<i;
-        plan->f[i][0] = (reinterpret_cast<float *>(np[0]))[i];
-        plan->f[i][1] = 0;
-        cout << i;
+    {
+        plan.f[i][0] = (reinterpret_cast<float *>(np[0]))[i];
+        plan.f[i][1] = 0;
     }
 
+    cout << "fill NFFT plan x with values" << endl;
+    for (int c = 0; c < 3; c++)
+        for (unsigned int i = 0; i < n_cells; i++)
+        {
+            plan.x[i * 3 + c] = 0;
+            //            plan.x[i * 3 + c] = (reinterpret_cast<float *>(np_center[0][c]))[i];
+        }
+    /*
+// Print out the non-equispaced grid values
+for (int i = 0; i < n_space_divx; i += 4)
+{
+    for (int j = 0; j < n_space_divy; j += 4)
+    {
+        for (int k = 0; k < n_space_divz; k += 4)
+        {
+            std::cout << plan.f[i * n_space_divy * n_space_divz + j * n_space_divz + k][0] << " ";
+            // std::cout << plan.x[(i * n_space_divy * n_space_divz + j * n_space_divz + k)*3] << " ";
+        }
+        std::cout << std::endl;
+    }
+    std::cout << std::endl;
+}
+*/
     //  Execute the forward NFFT transform
     cout << " NFFT transform forward plan" << endl;
-    nfftf_trafo(plan);
+    nfftf_trafo(&plan);
     cout << "copy the forward output " << endl;
 
     for (unsigned int i = 0; i < n_cells; i++)
     {
-        output[i][0] = plan->f_hat[i][0];
-        output[i][1] = plan->f_hat[i][1];
+        output[i][0] = plan.f_hat[i][0];
+        output[i][1] = plan.f_hat[i][1];
     }
     // Define the FFTW plan for inverse FFT
     cout << "define FFTW plan" << endl;
 
     fftwf_plan ifft = fftwf_plan_dft_3d(n_space_divx, n_space_divy, n_space_divz, reinterpret_cast<fftwf_complex *>(output),
-                                      reinterpret_cast<fftwf_complex *>(output),
-                                      FFTW_BACKWARD, FFTW_ESTIMATE);
+                                        reinterpret_cast<fftwf_complex *>(output),
+                                        FFTW_BACKWARD, FFTW_ESTIMATE);
 
     // Execute the inverse FFT
     cout << "execute the inverse FFTW plan" << endl;
@@ -205,19 +253,19 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
     fftwf_execute(ifft);
 
     // Print out the equispaced grid values
-    for (int i = 0; i < n_space_divx; i += 8)
+    for (int i = 0; i < n_space_divx; i += 4)
     {
-        for (int j = 0; j < n_space_divy; j += 8)
+        for (int j = 0; j < n_space_divy; j += 4)
         {
-            for (int k = 0; k < n_space_divz; k += 8)
+            for (int k = 0; k < n_space_divz; k += 4)
             {
-                std::cout << output[i * n_space_divy * n_space_divz + j * n_space_divz + k] << " ";
+                std::cout << output[i * n_space_divy * n_space_divz + j * n_space_divz + k][0] << " ";
             }
             std::cout << std::endl;
         }
         std::cout << std::endl;
     }
-    nfftf_finalize(plan);
+    nfftf_finalize(&plan);
     fftwf_destroy_plan(ifft);
 
     // calculate center of current density field
