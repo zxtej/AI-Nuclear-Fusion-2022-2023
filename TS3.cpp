@@ -72,7 +72,7 @@ int main()
     log_headers();
 
     cout << std::scientific;
-    cout.precision(3);
+    cout.precision(1);
     cerr << std::scientific;
     cerr.precision(3);
     cout << "float size=" << sizeof(float) << ", "

@@ -221,6 +221,7 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
 
     // Memory allocation is completely done by the init routine.
     cout << "init NFFT plan" << endl;
+
     nfftf_init_3d(&plan, n_space_divx, n_space_divy, n_space_divz, n_cells);
 
     cout << "fill NFFT plan array with values" << endl;
@@ -240,18 +241,18 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
             {
                 int n = k * n_space_divy * n_space_divz + j * n_space_divz + i;
                 {
-       //             cout << np_center[0][1][k][j][i] << " ";
+                    //             cout << np_center[0][1][k][j][i] << " ";
                     for (int c = 0; c < 3; c++)
                     {
                         plan.x[n * 3 + c] = np_center[0][c][k][j][i];
                     }
-                   //  cout << plan.x[n * 3 + 2] << " ";
-                    //plan.x[n * 3 + c] = (reinterpret_cast<float *>(np_center[0][c]))[n];
+                    //  cout << plan.x[n * 3 + 2] << " ";
+                    // plan.x[n * 3 + c] = (reinterpret_cast<float *>(np_center[0][c]))[n];
                 }
             }
-           // cout << endl;
+            // cout << endl;
         }
-//        cout << endl;
+        //        cout << endl;
     }
 
     /*
@@ -270,13 +271,24 @@ for (int i = 0; i < n_space_divx; i += 4)
     std::cout << std::endl;
 }
 */
-    cout << "nfft check: " ;
-    cout << nfftf_check(&plan) << endl;
+    cout << "nfft precompute: ";
+
+    if (plan.flags & PRE_ONE_PSI)
+        nfftf_precompute_one_psi(&plan);
+
+    cout << "nfft check: ";
+
+    const char *check_error_msg = nfftf_check(&plan);
+    if (check_error_msg != 0)
+    {
+        printf("Invalid nfft parameter: %s\n", check_error_msg);
+        return;
+    }
 
     //  Execute the forward NFFT transform
     cout << " NFFT transform forward plan" << endl;
-  //  nfftf_adjoint(&plan);
-     nfftf_trafo_3d(&plan);
+    //  nfftf_adjoint(&plan);
+    nfftf_trafo_3d(&plan);
     cout << "copy the forward output " << endl;
     for (int i = 0; i < n_space_divx; i += 1)
     {
@@ -285,11 +297,11 @@ for (int i = 0; i < n_space_divx; i += 4)
             for (int k = 0; k < n_space_divz; k += 1)
             {
                 int n = i * n_space_divy * n_space_divz + j * n_space_divz + k;
-                if (plan.f[n][0])
-                    std::cout << "f " << i << "," << j << "," << k << "," << plan.f[n][0] << ":" << plan.x[n * 3] << "," << plan.x[n * 3 + 1] << "," << plan.x[n * 3] << "," << plan.x[n * 3 + 2] << endl;
-                if (plan.f_hat[n][0])
-                    std::cout << "f_hat " << i << "," << j << "," << k << "," << plan.f_hat[n][0] << " ";
-                // std::cout << plan.x[(i * n_space_divy * n_space_divz + j * n_space_divz + k)*3] << " ";
+                //          if (plan.f[n][0])
+                //           std::cout << "f " << i << "," << j << "," << k << "," << plan.f[n][0] << ":" << plan.x[n * 3] << "," << plan.x[n * 3 + 1] << "," << plan.x[n * 3] << "," << plan.x[n * 3 + 2] << endl;
+                //          if (plan.f_hat[n][0])
+                //           std::cout << "f_hat " << i << "," << j << "," << k << "," << plan.f_hat[n][0] << " ";
+                cout << plan.x[(i * n_space_divy * n_space_divz + j * n_space_divz + k) * 3] << " ";
             }
             //   std::cout << std::endl;
         }
