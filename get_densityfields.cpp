@@ -164,44 +164,52 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
     cout << endl;
 
     cout << "calculate center of charge field" << endl;
-    for (int p = 0; p < 2; p++)
-        for (int c = 0; c < 3; c++)
-            // #pragma omp parallel for simd num_threads(nthreads)
-            for (unsigned int i = 0; i < n_cells; i++)
-            {
-                (reinterpret_cast<float *>(np_center[p][c]))[i] = (reinterpret_cast<float *>(np_center[p][c]))[i] / (((reinterpret_cast<float *>(np[p]))[i]) + 1.0e-10f);
-            }
-    int p = 0;
-    for (int i = 0; i < n_space_divx; i += 1)
-    {
-        for (int j = 0; j < n_space_divy; j += 1)
+    /*
+        for (int p = 0; p < 2; p++)
+            for (int c = 0; c < 3; c++)
+                // #pragma omp parallel for simd num_threads(nthreads)
+                for (unsigned int i = 0; i < n_cells; i++)
+                {
+                    (reinterpret_cast<float *>(np_center[p][c]))[i] = (reinterpret_cast<float *>(np_center[p][c]))[i] / (((reinterpret_cast<float *>(np[p]))[i]) + 1.0e-10f);
+                }
+                */
+    for (int p = 0; p < 1; p++)
+        for (int i = 0; i < n_space_divx; i += 1)
         {
-            for (int k = 0; k < n_space_divz; k += 1)
+            for (int j = 0; j < n_space_divy; j += 1)
             {
+                for (int k = 0; k < n_space_divz; k += 1)
+                {
+                    // int n = i * n_space_divy * n_space_divz + j * n_space_divz + k;
 
-                // int n = i * n_space_divy * n_space_divz + j * n_space_divz + k;
-                np_center[p][0][k][j][i] = (np_center[p][0][k][j][i] / (np[p][k][j][i] + 1e-20f) + i) / n_space_divx;
-                np_center[p][1][k][j][i] = (np_center[p][0][k][j][i] / (np[p][k][j][i] + 1e-20f) + j) / n_space_divy;
-                np_center[p][2][k][j][i] = (np_center[p][0][k][j][i] / (np[p][k][j][i] + 1e-20f) + k) / n_space_divz;
-                //               (reinterpret_cast<float *>(np_center[p][c]))[n] = (reinterpret_cast<float *>(np_center[p][c]))[n] / (((reinterpret_cast<float *>(np[p]))[n]) + 1.0e-10f);
+                    //                  cout << np[p][k][j][i] << " ";
+                    np_center[p][0][k][j][i] = (np_center[p][0][k][j][i] / (np[p][k][j][i] + 1.0e-5f) + (float)i) / (float)n_space_divx - 0.5f;
+                    np_center[p][1][k][j][i] = (np_center[p][1][k][j][i] / (np[p][k][j][i] + 1.0e-5f) + (float)j) / (float)n_space_divy - 0.5f;
+                    np_center[p][2][k][j][i] = (np_center[p][2][k][j][i] / (np[p][k][j][i] + 1.0e-5f) + (float)k) / (float)n_space_divz - 0.5f;
+                    //               (reinterpret_cast<float *>(np_center[p][c]))[n] = (reinterpret_cast<float *>(np_center[p][c]))[n] / (((reinterpret_cast<float *>(np[p]))[n]) + 1.0e-10f);
+                    //                   cout << np_center[p][0][k][j][i] << " ";
+                }
+                //      cout << endl;
             }
+            //      cout << endl;
         }
-    }
-/*
-    // Print out the center of charge  grid values
-    for (int i = 0; i < n_space_divx; i += 8)
-    {
-        for (int j = 0; j < n_space_divy; j += 8)
+
+        // Print out the center of charge  grid values
+        /*
+        for (int i = 0; i < n_space_divx; i += 1)
         {
-            for (int k = 0; k < n_space_divz; k += 8)
+            for (int j = 0; j < n_space_divy; j += 1)
             {
-                std::cout << (reinterpret_cast<float *>(np_center[0][1]))[i * n_space_divy * n_space_divz + j * n_space_divz + k] << " ";
+                for (int k = 0; k < n_space_divz; k += 1)
+                {
+                 //   std::cout << (reinterpret_cast<float *>(np_center[0][1]))[i * n_space_divy * n_space_divz + j * n_space_divz + k] << " ";
+                     cout << np_center[0][0][k][j][i] << " ";
+                }
+                std::cout << std::endl;
             }
             std::cout << std::endl;
         }
-        std::cout << std::endl;
-    }
-*/
+    */
 #pragma omp barrier
 
     // Allocate memory for the output grid
@@ -224,6 +232,7 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
     }
 
     cout << "fill NFFT plan x with values" << endl;
+
     for (int i = 0; i < n_space_divx; i += 1)
     {
         for (int j = 0; j < n_space_divy; j += 1)
@@ -231,11 +240,24 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
             for (int k = 0; k < n_space_divz; k += 1)
             {
                 int n = k * n_space_divy * n_space_divz + j * n_space_divz + i;
-                for (int c = 0; c < 3; c++)
-                    plan.x[n * 3 + c] = np_center[0][0][k][j][i];
-                //                    plan.x[n * 3 + c] = (reinterpret_cast<float *>(np_center[0][c]))[n];
+                {
+                    cout << np_center[0][1][k][j][i] << " ";
+                    for (int c = 0; c < 3; c++)
+                    {
+                        plan.x[n * 3 + c] = np_center[0][c][k][j][i];
+
+                        //                  if (plan.x[n * 3 + c] > 0.5)
+                        //                    cout << "> 0.5: " << i << "," << j << "," << k << "," << np_center[0][c][k][j][i] << endl;
+                        //              if (plan.x[n * 3 + c] < -0.5)
+                        //                cout << "<-0.5: " << i << "," << j << "," << k << "," << np_center[0][c][k][j][i] << endl;
+                    }
+                    // cout << plan.x[n * 3 + 1] << " ";
+                    //                    plan.x[n * 3 + c] = (reinterpret_cast<float *>(np_center[0][c]))[n];
+                }
             }
+            cout << endl;
         }
+        cout << endl;
     }
 
     /*
@@ -254,6 +276,8 @@ for (int i = 0; i < n_space_divx; i += 4)
     std::cout << std::endl;
 }
 */
+    cout << "nfft check: " << nfftf_check(&plan) << endl;
+
     //  Execute the forward NFFT transform
     cout << " NFFT transform forward plan" << endl;
     nfftf_adjoint_3d(&plan);
@@ -267,7 +291,7 @@ for (int i = 0; i < n_space_divx; i += 4)
             {
                 int n = i * n_space_divy * n_space_divz + j * n_space_divz + k;
                 if (plan.f[n][0])
-                    std::cout << "f " << i << "," << j << "," << k << "," << plan.f[n][0] << " ";
+                    std::cout << "f " << i << "," << j << "," << k << "," << plan.f[n][0] << ":" << plan.x[n * 3] << "," << plan.x[n * 3 + 1] << "," << plan.x[n * 3] << "," << plan.x[n * 3 + 2] << endl;
                 if (plan.f_hat[n][0])
                     std::cout << "f_hat " << i << "," << j << "," << k << "," << plan.f_hat[n][0] << " ";
                 // std::cout << plan.x[(i * n_space_divy * n_space_divz + j * n_space_divz + k)*3] << " ";
