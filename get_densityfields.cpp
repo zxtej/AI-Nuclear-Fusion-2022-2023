@@ -171,6 +171,22 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
             {
                 (reinterpret_cast<float *>(np_center[p][c]))[i] = (reinterpret_cast<float *>(np_center[p][c]))[i] / (((reinterpret_cast<float *>(np[p]))[i]) + 1.0e-10f);
             }
+    int p = 0;
+    for (int i = 0; i < n_space_divx; i += 1)
+    {
+        for (int j = 0; j < n_space_divy; j += 1)
+        {
+            for (int k = 0; k < n_space_divz; k += 1)
+            {
+
+                // int n = i * n_space_divy * n_space_divz + j * n_space_divz + k;
+                np_center[p][0][k][j][i] = (np_center[p][0][k][j][i] / (np[p][k][j][i] + 1e-20f) + i) / n_space_divx;
+                np_center[p][1][k][j][i] = (np_center[p][0][k][j][i] / (np[p][k][j][i] + 1e-20f) + j) / n_space_divy;
+                np_center[p][2][k][j][i] = (np_center[p][0][k][j][i] / (np[p][k][j][i] + 1e-20f) + k) / n_space_divz;
+                //               (reinterpret_cast<float *>(np_center[p][c]))[n] = (reinterpret_cast<float *>(np_center[p][c]))[n] / (((reinterpret_cast<float *>(np[p]))[n]) + 1.0e-10f);
+            }
+        }
+    }
 /*
     // Print out the center of charge  grid values
     for (int i = 0; i < n_space_divx; i += 8)
@@ -208,12 +224,20 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
     }
 
     cout << "fill NFFT plan x with values" << endl;
-    for (int c = 0; c < 3; c++)
-        for (unsigned int i = 0; i < n_cells; i++)
+    for (int i = 0; i < n_space_divx; i += 1)
+    {
+        for (int j = 0; j < n_space_divy; j += 1)
         {
-            plan.x[i * 3 + c] = 0;
-            //            plan.x[i * 3 + c] = (reinterpret_cast<float *>(np_center[0][c]))[i];
+            for (int k = 0; k < n_space_divz; k += 1)
+            {
+                int n = k * n_space_divy * n_space_divz + j * n_space_divz + i;
+                for (int c = 0; c < 3; c++)
+                    plan.x[n * 3 + c] = np_center[0][0][k][j][i];
+                //                    plan.x[n * 3 + c] = (reinterpret_cast<float *>(np_center[0][c]))[n];
+            }
         }
+    }
+
     /*
 // Print out the non-equispaced grid values
 for (int i = 0; i < n_space_divx; i += 4)
@@ -232,14 +256,14 @@ for (int i = 0; i < n_space_divx; i += 4)
 */
     //  Execute the forward NFFT transform
     cout << " NFFT transform forward plan" << endl;
-   // nfftf_adjoint_3d(&plan);
-   nfftf_trafo_3d(&plan);
+    nfftf_adjoint_3d(&plan);
+    // nfftf_trafo_3d(&plan);
     cout << "copy the forward output " << endl;
     for (int i = 0; i < n_space_divx; i += 1)
     {
-        for (int j = 0; j < n_space_divy; j += 4)
+        for (int j = 0; j < n_space_divy; j += 1)
         {
-            for (int k = 0; k < n_space_divz; k += 4)
+            for (int k = 0; k < n_space_divz; k += 1)
             {
                 int n = i * n_space_divy * n_space_divz + j * n_space_divz + k;
                 if (plan.f[n][0])
