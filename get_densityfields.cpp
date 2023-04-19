@@ -173,7 +173,7 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
                     (reinterpret_cast<float *>(np_center[p][c]))[i] = (reinterpret_cast<float *>(np_center[p][c]))[i] / (((reinterpret_cast<float *>(np[p]))[i]) + 1.0e-10f);
                 }
                 */
-    for (int p = 0; p < 1; p++)
+    for (int p = 0; p < 2; p++)
         for (int i = 0; i < n_space_divx; i += 1)
         {
             for (int j = 0; j < n_space_divy; j += 1)
@@ -181,13 +181,12 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
                 for (int k = 0; k < n_space_divz; k += 1)
                 {
                     // int n = i * n_space_divy * n_space_divz + j * n_space_divz + k;
-
                     //                  cout << np[p][k][j][i] << " ";
                     np_center[p][0][k][j][i] = (np_center[p][0][k][j][i] / (np[p][k][j][i] + 1.0e-5f) + (float)i) / (float)n_space_divx - 0.5f;
                     np_center[p][1][k][j][i] = (np_center[p][1][k][j][i] / (np[p][k][j][i] + 1.0e-5f) + (float)j) / (float)n_space_divy - 0.5f;
                     np_center[p][2][k][j][i] = (np_center[p][2][k][j][i] / (np[p][k][j][i] + 1.0e-5f) + (float)k) / (float)n_space_divz - 0.5f;
-                    //               (reinterpret_cast<float *>(np_center[p][c]))[n] = (reinterpret_cast<float *>(np_center[p][c]))[n] / (((reinterpret_cast<float *>(np[p]))[n]) + 1.0e-10f);
-                    //                   cout << np_center[p][0][k][j][i] << " ";
+                    // (reinterpret_cast<float *>(np_center[p][c]))[n] = (reinterpret_cast<float *>(np_center[p][c]))[n] / (((reinterpret_cast<float *>(np[p]))[n]) + 1.0e-10f);
+                    //   cout << np_center[p][0][k][j][i] << " ";
                 }
                 //      cout << endl;
             }
@@ -241,23 +240,18 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
             {
                 int n = k * n_space_divy * n_space_divz + j * n_space_divz + i;
                 {
-                    cout << np_center[0][1][k][j][i] << " ";
+       //             cout << np_center[0][1][k][j][i] << " ";
                     for (int c = 0; c < 3; c++)
                     {
                         plan.x[n * 3 + c] = np_center[0][c][k][j][i];
-
-                        //                  if (plan.x[n * 3 + c] > 0.5)
-                        //                    cout << "> 0.5: " << i << "," << j << "," << k << "," << np_center[0][c][k][j][i] << endl;
-                        //              if (plan.x[n * 3 + c] < -0.5)
-                        //                cout << "<-0.5: " << i << "," << j << "," << k << "," << np_center[0][c][k][j][i] << endl;
                     }
-                    // cout << plan.x[n * 3 + 1] << " ";
-                    //                    plan.x[n * 3 + c] = (reinterpret_cast<float *>(np_center[0][c]))[n];
+                   //  cout << plan.x[n * 3 + 2] << " ";
+                    //plan.x[n * 3 + c] = (reinterpret_cast<float *>(np_center[0][c]))[n];
                 }
             }
-            cout << endl;
+           // cout << endl;
         }
-        cout << endl;
+//        cout << endl;
     }
 
     /*
@@ -276,12 +270,13 @@ for (int i = 0; i < n_space_divx; i += 4)
     std::cout << std::endl;
 }
 */
-    cout << "nfft check: " << nfftf_check(&plan) << endl;
+    cout << "nfft check: " ;
+    cout << nfftf_check(&plan) << endl;
 
     //  Execute the forward NFFT transform
     cout << " NFFT transform forward plan" << endl;
-    nfftf_adjoint_3d(&plan);
-    // nfftf_trafo_3d(&plan);
+  //  nfftf_adjoint(&plan);
+     nfftf_trafo_3d(&plan);
     cout << "copy the forward output " << endl;
     for (int i = 0; i < n_space_divx; i += 1)
     {

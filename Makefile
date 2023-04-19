@@ -6,18 +6,18 @@ IDIR = include
 #https://stackoverflow.com/questions/14492436/g-optimization-beyond-o3-ofast
 CC=g++
 #ucrt64
-CFLAGS= -I$(IDIR) -I /ucrt64/include/vtk -L /ucrt64/lib/vtk -fopenmp -fopenmp-simd
-CFLAGS+= -Ofast -march=native -malign-double -ftree-parallelize-loops=8 -std=c++2b 
+CFLAGS= -g -I$(IDIR) -I /ucrt64/include/vtk -L /ucrt64/lib/vtk -fopenmp -fopenmp-simd -march=native -malign-double -std=c++2b 
+CFLAGS+= -Ofast -ftree-parallelize-loops=8 
 CFLAGS+= -mavx -mavx2 -mfma -ffast-math -ftree-vectorize -fomit-frame-pointer
 #mingw64
 #CFLAGS= -I$(IDIR) -I /mingw64/include/vtk -L /mingw64/lib/vtk -fopenmp -fopenmp-simd -Ofast -march=native -malign-double -ftree-parallelize-loops=8 -std=c++2b
 #CFLAGS= -I$(IDIR) -fopenmp -fopenmp-simd -Ofast -march=native -malign-double -ftree-parallelize-loops=8 -std=c++2b
-
+CFLAGSd= -g -I$(IDIR) -I /ucrt64/include/vtk -L /ucrt64/lib/vtk -fopenmp -fopenmp-simd -march=native -malign-double -std=c++2b 
 #LIBS= -lm -lgsl -lOpenCL.dll -lfftw3f -lomp.dll -lfftw3f_omp
 LIBS= -lm -lgsl -lOpenCL.dll  -lgomp.dll  -lfftw3f_omp -lfftw3f -lnfft3f_threads
-#-lnfft3f.dll 
+#-lnfft3f.dll -lnfft3f_threads
 #-lnfft3-4.dll 
-LIBS+=-lvtkCommonCore.dll  -lvtksys.dll -lvtkIOXML.dll -lvtkCommonDataModel.dll -lvtkIOCore.dll
+LIBS+= -lvtkCommonCore.dll  -lvtksys.dll -lvtkIOXML.dll -lvtkCommonDataModel.dll -lvtkIOCore.dll
 #-lvtkIOLegacy.dll -lvtkCommonComputationalGeometry.dll -lvtkCommonSystem.dll
 #-lvtkGraphics.dll -lvtkFiltersGeneral.dll -lvtkImagingCore.dll -lvtkFiltersGeneric.dll -lvtkIOCore.dll -lvtkIOImage.dll 
 AFLAGS= -flto -funroll-loops -fno-signed-zeros -fno-trapping-math -D_GLIBCXX_PARALLEL -fgcse-sm -fgcse-las 
@@ -45,13 +45,13 @@ $(ODIR)/%.o: %.cpp $(DEPS)
 	$(CC) -c -o $@ $< $(CFLAGS)
 
 $(DODIR)/%.o: %.cpp $(DEPS)
-	$(CC) -g -c -o $@ $< $(CFLAGS)
+	$(CC) -g -c -o $@ $< $(CFLAGSd)
 
 TS3: $(OBJ)
 	$(CC) -v -o $@ $^ $(CFLAGS) $(LIBS)
 
 debug: $(DOBJ)
-	$(CC) -g -v -o TS3$@ $^ $(CFLAGS) $(LIBS)
+	$(CC) -v -o TS3$@ $^ $(CFLAGSd) $(LIBS)
 
 .PHONY: clean
 
