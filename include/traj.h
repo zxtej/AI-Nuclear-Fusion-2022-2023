@@ -41,14 +41,14 @@ using namespace std;
 extern cl::Context context_g;
 extern cl::Device default_device_g;
 extern cl::Program program_g;
-
-#ifdef RamDisk // save file info - initialize filepath
-const string outpath = "R:\\Temp\\out\\";
-#elif !defined(_WIN32) && (defined(__unix__) || defined(__unix) || (defined(__APPLE__) && defined(__MACH__)))
+extern string outpath ;
+//#ifdef RamDisk // save file info - initialize filepath
+const string outpath1 = "R:\\Temp\\out\\";
+#if !defined(_WIN32) && (defined(__unix__) || defined(__unix) || (defined(__APPLE__) && defined(__MACH__)))
 /* UNIX-style OS. ------------------------------------------- */
-const string outpath = std::filesystem::temp_directory_path().string() + "/out/";
+const string outpath2 = std::filesystem::temp_directory_path().string() + "/out/";
 #else
-const string outpath = std::filesystem::temp_directory_path().string() + "out/";
+const string outpath2 = std::filesystem::temp_directory_path().string() + "out/";
 #endif
 static int nthreads;
 constexpr int alignment = 64; // 512 bits / 8 bits per byte = 64 bytes

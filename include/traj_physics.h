@@ -1,4 +1,4 @@
-//#define RamDisk // whether to use RamDisk
+#define RamDisk // whether to use RamDisk
 #define maxcells 16
 #define cldevice 1
 //constexpr int nthreads = 8;    // match with your CPU
