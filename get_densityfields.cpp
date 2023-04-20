@@ -157,13 +157,8 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
     }
 
 #pragma omp barrier
-    cout << "get_density_almost done\n";
     // calculate center of charge field
-    for (int c = 0; c < 3; c++)
-        cout << ddi[c] << ", ";
-    cout << endl;
-
-    cout << "calculate center of charge field" << endl;
+    //   cout << "calculate center of charge field" << endl;
     /*
         for (int p = 0; p < 2; p++)
             for (int c = 0; c < 3; c++)
@@ -186,6 +181,8 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
                     np_center[p][1][k][j][i] = (np_center[p][1][k][j][i] / (np[p][k][j][i] + 1.0e-5f) + (float)j) / (float)n_space_divy - 0.5f;
                     np_center[p][2][k][j][i] = (np_center[p][2][k][j][i] / (np[p][k][j][i] + 1.0e-5f) + (float)k) / (float)n_space_divz - 0.5f;
                     // (reinterpret_cast<float *>(np_center[p][c]))[n] = (reinterpret_cast<float *>(np_center[p][c]))[n] / (((reinterpret_cast<float *>(np[p]))[n]) + 1.0e-10f);
+                    // Print out the center of charge  grid values
+
                     //   cout << np_center[p][0][k][j][i] << " ";
                 }
                 //      cout << endl;
@@ -194,21 +191,7 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
         }
 
         // Print out the center of charge  grid values
-        /*
-        for (int i = 0; i < n_space_divx; i += 1)
-        {
-            for (int j = 0; j < n_space_divy; j += 1)
-            {
-                for (int k = 0; k < n_space_divz; k += 1)
-                {
-                 //   std::cout << (reinterpret_cast<float *>(np_center[0][1]))[i * n_space_divy * n_space_divz + j * n_space_divz + k] << " ";
-                     cout << np_center[0][0][k][j][i] << " ";
-                }
-                std::cout << std::endl;
-            }
-            std::cout << std::endl;
-        }
-    */
+
 #pragma omp barrier
 
     // Allocate memory for the output grid
