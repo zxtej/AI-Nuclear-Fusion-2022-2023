@@ -182,10 +182,10 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
     // Print out the center of charge  grid values
 
 #pragma omp barrier
-//#pragma omp parallel for
+    // #pragma omp parallel for
     for (int p = 0; p < 2; p++)
     {
-      //  int p = omp_get_thread_num();
+        //  int p = omp_get_thread_num();
         // Allocate memory for the output grid
         //            cout << "allocate memory for output grid" << endl;
         auto *output = new fftwf_complex[n_cells];
@@ -218,11 +218,11 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
                     }
                 }
         // cout << endl;
-            cout << "nfft precompute: "<<p<<endl;
+        cout << "nfft precompute: " << p << endl;
         if (plan.flags & PRE_ONE_PSI)
             nfftf_precompute_one_psi(&plan);
 
-            cout << "nfft check: ";
+        cout << "nfft check: ";
         const char *check_error_msg = nfftf_check(&plan);
         if (check_error_msg != 0)
         {
@@ -230,23 +230,35 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
             //       return;
         }
 
-           cout << "Execute NFFT transform plan to get fhat" << endl;//  Execute the forward NFFT transform
+        cout << "Execute NFFT transform plan to get fhat" << endl; //  Execute the forward NFFT transform
         nfftf_adjoint(&plan);
+        /*
+                // Define the FFTW plan for inverse FFT
+                cout << "define FFTW plan" << endl;
+                //   fftwf_plan ifft = fftwf_plan_dft_3d(n_space_divx, n_space_divy, n_space_divz, reinterpret_cast<fftwf_complex *>(output),reinterpret_cast<fftwf_complex *>(output),FFTW_BACKWARD, FFTW_ESTIMATE);
+                fftwf_plan ifft = fftwf_plan_dft_3d(n_space_divx, n_space_divy, n_space_divz, plan.f_hat, plan.f, FFTW_BACKWARD, FFTW_ESTIMATE);
 
-        // Define the FFTW plan for inverse FFT
-        cout << "define FFTW plan" << endl;
-        //   fftwf_plan ifft = fftwf_plan_dft_3d(n_space_divx, n_space_divy, n_space_divz, reinterpret_cast<fftwf_complex *>(output),reinterpret_cast<fftwf_complex *>(output),FFTW_BACKWARD, FFTW_ESTIMATE);
-        fftwf_plan ifft = fftwf_plan_dft_3d(n_space_divx, n_space_divy, n_space_divz, plan.f_hat, plan.f, FFTW_BACKWARD, FFTW_ESTIMATE);
-
-        // Execute the inverse FFT
+                // Execute the inverse FFT
+                */
+        // make regular equispaced x
+        for (int k = 0; k < n_space_divz; k += 1)
+            for (int j = 0; j < n_space_divy; j += 1)
+                for (int i = 0; i < n_space_divx; i += 1)
+                {
+                    int n = k * n_space_divy * n_space_divz + j * n_space_divz + i;
+                    //     int n = (i * N2 + j) * N1 + k;
+                    plan.x[3 * n] = -0.5 + (float)i / n_space_divx; // p.x[n][0]=x ..,y,z
+                    plan.x[3 * n + 1] = -0.5 + (float)j / n_space_divy;
+                    plan.x[3 * n + 2] = -0.5 + (float)k / n_space_divz;
+                }
         cout << "execute the inverse FFTW plan" << endl;
-
-        fftwf_execute(ifft);
+        nfftf_trafo(&plan);
+        // fftwf_execute(ifft);
         //        copy back density
         for (unsigned int n = 0; n < n_cells; n++)
             (reinterpret_cast<float *>(np[p]))[n] = plan.f[n][0];
         nfftf_finalize(&plan);
-        fftwf_destroy_plan(ifft);
+        //       fftwf_destroy_plan(ifft);
     }
     // calculate center of current density field
     for (int p = 0; p < 2; p++)
