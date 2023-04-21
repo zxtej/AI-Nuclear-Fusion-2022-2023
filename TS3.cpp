@@ -8,13 +8,23 @@ int ncalc[2] = {md_me * 1, 1};
 int n_part[3] = {n_parte, n_partd, n_parte + n_partd}; // 0,number of "super" electrons, electron +deuteriom ions, total
 unsigned int n_space_div[3] = {n_space_divx, n_space_divy, n_space_divz};
 unsigned int n_space_div2[3] = {n_space_divx2, n_space_divy2, n_space_divz2};
+string outpath;
 int main()
 {
     // Fast printing
     cin.tie(NULL);
     // ios_base::sync_with_stdio(false);
-    cout << "Output dir: " << outpath << "\n";
-    bool check = std::filesystem::create_directory(outpath);
+
+    if (std::filesystem::create_directory(outpath1))
+    {
+        cout << "Output dir: " << outpath1 << "\n";
+        outpath = outpath1;
+    }
+    else if (std::filesystem::create_directory(outpath2))
+    {
+        cout << "Output dir: " << outpath2 << "\n";
+        outpath = outpath2;
+    }
 
     timer.mark(); // Yes, 3 time marks. The first is for the overall program dt
     timer.mark(); // The second is for compute_d_time
@@ -72,7 +82,7 @@ int main()
     log_headers();
 
     cout << std::scientific;
-    cout.precision(3);
+    cout.precision(1);
     cerr << std::scientific;
     cerr.precision(3);
     cout << "float size=" << sizeof(float) << ", "
@@ -129,7 +139,7 @@ int main()
         cout << "dt = " << dt[0] << " s, Total time = " << dt[0] * ncalc[0] * ndatapoints * nc << ", s" << endl;
         cout << "Debye Length = " << Debye_Length << " m, initial dimension = " << a0 << " m" << endl;
         cout << "number of particle per cell = " << n_partd / (n_space * n_space * n_space) * 8 << endl;
-*/
+    */
         E_file.open("info.csv");
         /*
         E_file << ",X, Y, Z" << endl;
@@ -154,7 +164,7 @@ int main()
         E_file << "Debye Length =," << Debye_Length << ",m" << endl;
         E_file << "Larmor radius =," << vel_e / (Bmax * e_charge_mass) << ",m" << endl;
 
-   */
+    */
         E_file << "dt =," << dt[0] << ",s" << endl;
         E_file << "cell size =," << a0 << ",m" << endl;
         E_file << "number of particles per cell = ," << n_partd / (n_space * n_space * n_space) << endl;

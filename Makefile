@@ -48,7 +48,7 @@ $(DODIR)/%.o: %.cpp $(DEPS)
 	$(CC) -g -c -o $@ $< $(CFLAGSd)
 
 TS3: $(OBJ)
-	$(CC) -v -o $@ $^ $(CFLAGS) $(LIBS)
+	$(CC) -o $@ $^ $(CFLAGS) $(LIBS)
 
 debug: $(DOBJ)
 	$(CC) -v -o TS3$@ $^ $(CFLAGSd) $(LIBS)
