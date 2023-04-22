@@ -15,16 +15,18 @@ int main()
     cin.tie(NULL);
     // ios_base::sync_with_stdio(false);
 
-    if (std::filesystem::create_directory(outpath1))
+    if (!std::filesystem::create_directory(outpath1))
     {
         cout << "Output dir: " << outpath1 << "\n";
         outpath = outpath1;
     }
-    else if (std::filesystem::create_directory(outpath2))
+    else if (!std::filesystem::create_directory(outpath2))
     {
         cout << "Output dir: " << outpath2 << "\n";
         outpath = outpath2;
     }
+    else
+        return (1);
 
     timer.mark(); // Yes, 3 time marks. The first is for the overall program dt
     timer.mark(); // The second is for compute_d_time
@@ -95,8 +97,12 @@ int main()
     cout << "Start up dt = " << timer.replace() << "s\n";
 #define generateRandom
 #ifdef generateRandom
-    //    generate_rand_sphere(a0, pos0x, pos0y, pos0z, pos1x, pos1y, pos1z, q, m, nt,dt);
+#ifdef sphere
+    generate_rand_sphere(a0, pos0x, pos0y, pos0z, pos1x, pos1y, pos1z, q, m, nt, dt);
+#endif // sphere
+#ifdef cylinder
     generate_rand_cylinder(a0, pos0x, pos0y, pos0z, pos1x, pos1y, pos1z, q, m, nt, dt);
+#endif // cylinder
 #else
     generateParticles(a0, r0, qs, mp, pos0x, pos0y, pos0z, pos1x, pos1y, pos1z, q, m, nt);
     n_part[0] = abs(nt[0]);

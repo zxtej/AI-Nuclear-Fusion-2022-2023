@@ -1,21 +1,21 @@
-#define RamDisk // whether to use RamDisk
-#define maxcells 16
+#define RamDisk // whether to use RamDisk if no ramdisk files will be in temp directory
+#define maxcells 32
 #define cldevice 1
-//constexpr int nthreads = 8;    // match with your CPU
- //   const size_t alignment = 64; // 512 bits / 8 bits per byte = 64 bytes
+#define sphere //do hot spot  problem
+//#define cylinder //do hot rod problem
 #define Temp_e 1e7 // in Kelvin
 #define Temp_d 1e7 // in Kelvin
 
 // The maximum expected E and B fields. If fields go beyond this, the the time step, cell size etc will be wrong. Should adjust and recalculate.
 //  maximum expected magnetic field
-constexpr float Bmax0 = 100;
+constexpr float Bmax0 = 1;
 constexpr float Emax0 = 1e8;
 
 constexpr float a0 = 20e-3; // typical dimensions of a cell
-constexpr float target_part = 1e10;
+constexpr float target_part = 1e14;
 
 // technical parameters
-constexpr int n_space = 16;                              // must be 2 to power of n
+constexpr int n_space = 128;                              // must be 2 to power of n
 constexpr int n_partd = n_space * n_space * n_space * 64; // must be 2 to power of n
 constexpr int n_parte = n_partd;
 
@@ -24,8 +24,8 @@ constexpr unsigned int ncoeff = 8;
 constexpr int n_output_part = (n_partd > 8192) ? 8192 : n_partd; // maximum number of particles to output to file
 // const int nprtd=floor(n_partd/n_output_part);
 
-constexpr int ndatapoints = 30; // total number of time steps to calculate
-constexpr int nc = 1;           // number of times to calculate E and B between printouts
+constexpr int ndatapoints = 9; // total number of time steps to calculate
+constexpr int nc = 10;           // number of times to calculate E and B between printouts
 constexpr int md_me = 60;        // ratio of electron speed/deuteron speed at the same KE. Used to calculate electron motion more often than deuteron motion
 
 
