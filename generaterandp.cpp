@@ -35,8 +35,7 @@ void generate_rand_sphere(float a0, float pos0x[2][n_partd], float pos0y[2][n_pa
     dt[1] = dt[0] * md_me;
     //  float mu0_4pidt[2]= {mu0_4pi/dt[0],mu0_4pi/dt[1]};
     cout << "v0 electron = " << v0[0][0] << "," << v0[0][1] << "," << v0[0][2] << endl;
-    //   cout <<"Initial Current = "<<initial_current<<endl;
-    //   cout <<"Initial Bmax = "<<initial_current*2e-7/a0<<endl;
+
     // set initial positions and velocity
     float sigma[2] = {sqrt(kb * Temp[0] / (mp[0] * e_mass)), sqrt(kb * Temp[1] / (mp[1] * e_mass))};
     long seed;
@@ -121,12 +120,9 @@ void generate_rand_cylinder(float a0, float pos0x[2][n_partd], float pos0y[2][n_
 
     for (int p = 0; p < 2; p++)
     {
-        //#pragma omp parallel for reduction(+ \
-                                   : nt)
         for (int n = 0; n < n_partd; n++)
         {
             float r = r0 * pow(gsl_ran_flat(rng, 0, 1), 0.5);
-            // if (p == 0) r += n_space / 8 * a0;
             double x, y, z;
             z = gsl_ran_flat(rng, -1.0, 1.0) * a0 * n_space/2 ;
             gsl_ran_dir_2d(rng, &x, &y);

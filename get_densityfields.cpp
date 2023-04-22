@@ -28,9 +28,9 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
     static auto *offset = static_cast<float(*)[3][n_parte]>(_aligned_malloc(2 * 3 * n_parte * sizeof(float), alignment));
 
     // center of charge field arrays [2-particle type][3 pos][z][y][x]
-    auto *np_center = static_cast<float(*)[3][n_space_divz][n_space_divy][n_space_divx]>(_aligned_malloc(2 * 3 * n_space_divz * n_space_divy * n_space_divx * sizeof(float), alignment));
+    auto *np_center = static_cast<float(*)[n_space_divz][n_space_divy][n_space_divx][3]>(_aligned_malloc(2 * 3 * n_space_divz * n_space_divy * n_space_divx * sizeof(float), alignment));
     // center of current field arrays [2][3-pos][3-current component][z][y][x]
-    auto *jc_center = static_cast<float(*)[3][3][n_space_divz][n_space_divy][n_space_divx]>(_aligned_malloc(2 * 3 * 3 * n_space_divz * n_space_divy * n_space_divx * sizeof(float), alignment));
+    auto *jc_center = static_cast<float(*)[3][n_space_divz][n_space_divy][n_space_divx][3]>(_aligned_malloc(2 * 3 * 3 * n_space_divz * n_space_divy * n_space_divx * sizeof(float), alignment));
     // set fields=0 in preparation// Could split into threads.
     fill(reinterpret_cast<float *>(currentj), reinterpret_cast<float *>(currentj) + n_cells * 2 * 3, 0.f);
     fill(reinterpret_cast<float *>(np), reinterpret_cast<float *>(np) + n_cells * 2, 0.f);
@@ -46,15 +46,18 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
 #pragma omp parallel num_threads(2)
     {
         int p = omp_get_thread_num();
-        // get cell indices (x,y,z) a particle belongs to
 #pragma omp parallel for simd num_threads(nthreads)
-        for (unsigned int n = 0; n < n_part[p]; ++n)
+        for (unsigned int n = 0; n < n_part[p]; ++n) // get cell indices (x,y,z) a particle belongs to
         {
             ii[p][0][n] = (int)((pos1x[p][n] - posL[0]) * ddi[0]);
             ii[p][1][n] = (int)((pos1y[p][n] - posL[1]) * ddi[1]);
             ii[p][2][n] = (int)((pos1z[p][n] - posL[2]) * ddi[2]);
         }
+    }
 #pragma omp barrier
+#pragma omp parallel num_threads(2)
+    {
+        int p = omp_get_thread_num();
         nob[p] = 0;
         nib[p] = 0;
         for (unsigned int n = 0; n < n_part[p]; ++n)
@@ -128,28 +131,28 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
         {
             unsigned int i = ii[p][0][n], j = ii[p][1][n], k = ii[p][2][n];
             np[p][k][j][i] += q[p][n];
-            np_center[p][0][k][j][i] += q[p][n] * offset[p][0][n];
-            np_center[p][1][k][j][i] += q[p][n] * offset[p][1][n];
-            np_center[p][2][k][j][i] += q[p][n] * offset[p][2][n];
+            np_center[p][k][j][i][0] += q[p][n] * offset[p][0][n];
+            np_center[p][k][j][i][1] += q[p][n] * offset[p][1][n];
+            np_center[p][k][j][i][2] += q[p][n] * offset[p][2][n];
 
             currentj[p][0][k][j][i] += v[p][0][n];
-            jc_center[p][0][0][k][j][i] += v[p][0][n] * offset[p][0][n];
-            jc_center[p][1][0][k][j][i] += v[p][0][n] * offset[p][1][n];
-            jc_center[p][2][0][k][j][i] += v[p][0][n] * offset[p][2][n];
+            jc_center[p][0][k][j][i][0] += v[p][0][n] * offset[p][0][n];
+            jc_center[p][1][k][j][i][0] += v[p][0][n] * offset[p][1][n];
+            jc_center[p][2][k][j][i][0] += v[p][0][n] * offset[p][2][n];
             currentj[p][1][k][j][i] += v[p][1][n];
-            jc_center[p][0][1][k][j][i] += v[p][1][n] * offset[p][0][n];
-            jc_center[p][1][1][k][j][i] += v[p][1][n] * offset[p][1][n];
-            jc_center[p][2][1][k][j][i] += v[p][1][n] * offset[p][2][n];
+            jc_center[p][0][k][j][i][1] += v[p][1][n] * offset[p][0][n];
+            jc_center[p][1][k][j][i][1] += v[p][1][n] * offset[p][1][n];
+            jc_center[p][2][k][j][i][1] += v[p][1][n] * offset[p][2][n];
             currentj[p][2][k][j][i] += v[p][2][n];
-            jc_center[p][0][2][k][j][i] += v[p][2][n] * offset[p][0][n];
-            jc_center[p][1][2][k][j][i] += v[p][2][n] * offset[p][1][n];
-            jc_center[p][2][2][k][j][i] += v[p][2][n] * offset[p][2][n];
+            jc_center[p][0][k][j][i][2] += v[p][2][n] * offset[p][0][n];
+            jc_center[p][1][k][j][i][2] += v[p][2][n] * offset[p][1][n];
+            jc_center[p][2][k][j][i][2] += v[p][2][n] * offset[p][2][n];
         }
     }
 
 #pragma omp barrier
-    // calculate center of charge field
-    //   cout << "calculate center of charge field" << endl;
+// calculate center of charge field
+//   cout << "calculate center of charge field" << endl;
 #pragma omp parallel num_threads(2)
     {
         int p = omp_get_thread_num();
@@ -160,85 +163,19 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
                     // int n = i * n_space_divy * n_space_divz + j * n_space_divz + k;
                     // Print out the center of charge  grid values
                     //                  cout << np[p][k][j][i] << " ";
-                    np_center[p][0][k][j][i] = (np_center[p][0][k][j][i] / (np[p][k][j][i] + 1.0e-5f) + (float)i) / (float)n_space_divx - 0.5f;
-                    np_center[p][1][k][j][i] = (np_center[p][1][k][j][i] / (np[p][k][j][i] + 1.0e-5f) + (float)j) / (float)n_space_divy - 0.5f;
-                    np_center[p][2][k][j][i] = (np_center[p][2][k][j][i] / (np[p][k][j][i] + 1.0e-5f) + (float)k) / (float)n_space_divz - 0.5f;
-                    // (reinterpret_cast<float *>(np_center[p][c]))[n] = (reinterpret_cast<float *>(np_center[p][c]))[n] / (((reinterpret_cast<float *>(np[p]))[n]) + 1.0e-10f);
-                    // Print out the center of charge  grid values
-                    //   cout << np_center[p][0][k][j][i] << " ";
+                    np_center[p][k][j][i][0] = (np_center[p][k][j][i][0] / (np[p][k][j][i] + 1.0e-5f) + (float)i) / (float)n_space_divx - 0.5f;
+                    np_center[p][k][j][i][1] = (np_center[p][k][j][i][1] / (np[p][k][j][i] + 1.0e-5f) + (float)j) / (float)n_space_divy - 0.5f;
+                    np_center[p][k][j][i][2] = (np_center[p][k][j][i][2] / (np[p][k][j][i] + 1.0e-5f) + (float)k) / (float)n_space_divz - 0.5f;
                 }
         //      cout << endl;
     }
 
     // Print out the center of charge  grid values
-
 #pragma omp barrier
-    // #pragma omp parallel for
+ //#pragma omp parallel for
     for (int p = 0; p < 2; p++)
     {
-        //  int p = omp_get_thread_num();
-        //            cout << "allocate memory for output grid" << endl;
-        auto *output = new fftwf_complex[n_cells]; // Allocate memory for the output grid
-
-        //  cout << "define NFFT plan" << endl;
-        nfftf_plan plan; // Define the NFFT plan
-
-        //  cout << "init NFFT plan" << endl;// Memory allocation is completely done by the init routine.
-        nfftf_init_3d(&plan, n_space_divx, n_space_divy, n_space_divz, n_cells);
-
-        //    cout << "fill NFFT plan array with values" << endl;
-        for (unsigned int i = 0; i < n_cells; i++)
-        {
-            plan.f[i][0] = (reinterpret_cast<float *>(np[p]))[i];
-            plan.f[i][1] = 0;
-        }
-
-        //          cout << "fill NFFT plan x with values" << endl;
-        for (int k = 0; k < n_space_divz; k += 1)
-            for (int j = 0; j < n_space_divy; j += 1)
-                for (int i = 0; i < n_space_divx; i += 1)
-                {
-                    int n = k * n_space_divy * n_space_divz + j * n_space_divz + i;
-                    for (int c = 0; c < 3; c++)
-                    {
-                        plan.x[n * 3 + c] = np_center[p][c][k][j][i];
-                    }
-                }
-        // cout << endl;
-        //      cout << "nfft precompute: " << p << endl;
-        if (plan.flags & PRE_ONE_PSI)
-            nfftf_precompute_one_psi(&plan);
-
-        cout << "nfft check: ";
-        const char *check_error_msg = nfftf_check(&plan);
-        if (check_error_msg != 0)
-        {
-            printf("Invalid nfft parameter: %s\n", check_error_msg);
-        }
-
-        //        cout << "Execute NFFT transform plan to get fhat" << endl; //  Execute the forward NFFT transform
-        nfftf_adjoint(&plan);
-
-        // make regular equispaced x
-        /*
-        for (int k = 0; k < n_space_divz; k += 1)
-            for (int j = 0; j < n_space_divy; j += 1)
-                for (int i = 0; i < n_space_divx; i += 1)
-                {
-                    int n = k * n_space_divy * n_space_divz + j * n_space_divz + i;
-                    plan.x[3 * n] = -0.5 + (float)i / n_space_divx; // p.x[n][0]=x ..,y,z
-                    plan.x[3 * n + 1] = -0.5 + (float)j / n_space_divy;
-                    plan.x[3 * n + 2] = -0.5 + (float)k / n_space_divz;
-                }
-        */
-            // cout << "execute the inverse FFTW plan" << endl;  // Execute the inverse FFT
-            nfftf_trafo(&plan);
-        // fftwf_execute(ifft);
-        //        copy back density
-        for (unsigned int n = 0; n < n_cells; n++)
-            (reinterpret_cast<float *>(np[p]))[n] = plan.f[n][0] / n_cells; // divide by ncell to normaliae
-        nfftf_finalize(&plan);
-        //       fftwf_destroy_plan(ifft);
+        smoothscalarfield(np[p], np_center[p]);
     }
     // calculate center of current density field
     for (int p = 0; p < 2; p++)
