@@ -13,9 +13,13 @@ void smoothscalarfield(float f[n_space_divz][n_space_divy][n_space_divx],
         for (int j = 0; j < n_space_divy; j += 1)
             for (int i = 0; i < n_space_divx; i += 1)
             {
-                fc[k][j][i][0] = (fc[k][j][i][0] / (f[k][j][i] + 1.0e-5f)) - 0.5f;
-                fc[k][j][i][1] = (fc[k][j][i][1] / (f[k][j][i] + 1.0e-5f)) - 0.5f;
-                fc[k][j][i][2] = (fc[k][j][i][2] / (f[k][j][i] + 1.0e-5f)) - 0.5f;
+                fc[k][j][i][0] = (fc[k][j][i][0] / (f[k][j][i] + 1.0e-5f));
+                fc[k][j][i][1] = (fc[k][j][i][1] / (f[k][j][i] + 1.0e-5f));
+                fc[k][j][i][2] = (fc[k][j][i][2] / (f[k][j][i] + 1.0e-5f));
+                if (fc[k][j][i][0] > 0.5)
+                    cout << fc[k][j][i][0] <<" ";
+                if (fc[k][j][i][0] < -0.5)
+                    cout << fc[k][j][i][0] <<" " <<f[k][j][i] <<" " ;
             }
     // calculate the 8 coefficients out of 27 and their indices
     /* center is [0][0][0] [dk][dj][di]so [-1][-1][-1],[-1][-1][0],[-1][-1][1] ... dk*n_space_divx*n_space_divx+dj*n_space_divx+di */
@@ -32,7 +36,7 @@ void smoothscalarfield(float f[n_space_divz][n_space_divy][n_space_divx],
                 //              cout << (fc[k0][j0][i0][2] < 0.0f) << (fc[k0][j0][i0][1] < 0.0f) << (fc[k0][j0][i0][0] < 0.0f) << endl;
                 switch (sw)
                 {
-                case 0:
+                case 0: // 000
                     k1 = k0 - 1;
                     j1 = j0 - 1;
                     i1 = i0 - 1;
@@ -43,7 +47,7 @@ void smoothscalarfield(float f[n_space_divz][n_space_divy][n_space_divx],
                     fx0 = -fc[k0][j0][i0][0];
                     fx1 = 1 + fc[k0][j0][i0][0];
                     break;
-                case 1:
+                case 1: // 001
                     k1 = k0 - 1;
                     j1 = j0 - 1;
                     i1 = i0 + 1;
@@ -54,7 +58,7 @@ void smoothscalarfield(float f[n_space_divz][n_space_divy][n_space_divx],
                     fx0 = fc[k0][j0][i0][0];
                     fx1 = 1 - fc[k0][j0][i0][0];
                     break;
-                case 2:
+                case 2: // 010
                     k1 = k0 - 1;
                     j1 = j0 + 1;
                     i1 = i0 - 1;
@@ -65,7 +69,7 @@ void smoothscalarfield(float f[n_space_divz][n_space_divy][n_space_divx],
                     fx0 = -fc[k0][j0][i0][0];
                     fx1 = 1 + fc[k0][j0][i0][0];
                     break;
-                case 3:
+                case 3: // 011
                     k1 = k0 - 1;
                     j1 = j0 + 1;
                     i1 = i0 + 1;
@@ -76,7 +80,7 @@ void smoothscalarfield(float f[n_space_divz][n_space_divy][n_space_divx],
                     fx0 = fc[k0][j0][i0][0];
                     fx1 = 1 - fc[k0][j0][i0][0];
                     break;
-                case 4:
+                case 4: // 100
                     k1 = k0 + 1;
                     j1 = j0 - 1;
                     i1 = i0 - 1;
@@ -88,7 +92,7 @@ void smoothscalarfield(float f[n_space_divz][n_space_divy][n_space_divx],
                     fx1 = 1 + fc[k0][j0][i0][0];
                     break;
                     break;
-                case 5:
+                case 5: // 101
                     k1 = k0 + 1;
                     j1 = j0 - 1;
                     i1 = i0 + 1;
@@ -99,7 +103,7 @@ void smoothscalarfield(float f[n_space_divz][n_space_divy][n_space_divx],
                     fx0 = fc[k0][j0][i0][0];
                     fx1 = 1 - fc[k0][j0][i0][0];
                     break;
-                case 6:
+                case 6: // 110
                     k1 = k0 + 1;
                     j1 = j0 + 1;
                     i1 = i0 - 1;
@@ -110,7 +114,7 @@ void smoothscalarfield(float f[n_space_divz][n_space_divy][n_space_divx],
                     fx0 = -fc[k0][j0][i0][0];
                     fx1 = 1 + fc[k0][j0][i0][0];
                     break;
-                case 7:
+                case 7: // 111
                     k1 = k0 + 1;
                     j1 = j0 + 1;
                     i1 = i0 + 1;
@@ -125,12 +129,12 @@ void smoothscalarfield(float f[n_space_divz][n_space_divy][n_space_divx],
                     cout << "smoothfield default " << sw << endl;
                 }
                 ftemp[k0][j0][i0] += f[k0][j0][i0] * fz1 * fy1 * fx1;
-                ftemp[k1][j0][i0] += f[k0][j0][i0] * fz0 * fz1 * fx1;
+                ftemp[k1][j0][i0] += f[k0][j0][i0] * fz0 * fy1 * fx1;
                 ftemp[k0][j1][i0] += f[k0][j0][i0] * fz1 * fy0 * fx1;
                 ftemp[k1][j1][i0] += f[k0][j0][i0] * fz0 * fy0 * fx1;
                 ftemp[k0][j0][i1] += f[k0][j0][i0] * fz1 * fy1 * fx0;
                 ftemp[k1][j0][i1] += f[k0][j0][i0] * fz0 * fy1 * fx0;
-                ftemp[k0][j1][i1] += f[k0][j0][i0] * fz1 * fy0 * fx1;
+                ftemp[k0][j1][i1] += f[k0][j0][i0] * fz1 * fy0 * fx0;
                 ftemp[k1][j1][i1] += f[k0][j0][i0] * fz0 * fy0 * fx0;
             }
     //  cout << "smoothfield copy back" << endl;
@@ -138,7 +142,7 @@ void smoothscalarfield(float f[n_space_divz][n_space_divy][n_space_divx],
         for (int j = 0; j < n_space_divy; j += 1)
             for (int i = 0; i < n_space_divx; i += 1)
             {
-                f[k][j][i] = ftemp[k][j][i];
+                //             f[k][j][i] = ftemp[k][j][i];
             }
 }
 

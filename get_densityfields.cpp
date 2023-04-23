@@ -49,9 +49,12 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
 #pragma omp parallel for simd num_threads(nthreads)
         for (unsigned int n = 0; n < n_part[p]; ++n) // get cell indices (x,y,z) a particle belongs to
         {
-            ii[p][0][n] = (int)((pos1x[p][n] - posL[0]) * ddi[0]);
-            ii[p][1][n] = (int)((pos1y[p][n] - posL[1]) * ddi[1]);
-            ii[p][2][n] = (int)((pos1z[p][n] - posL[2]) * ddi[2]);
+            ii[p][0][n] = (int)roundf((pos1x[p][n] - posL[0]) * ddi[0]);
+            ii[p][1][n] = (int)roundf((pos1y[p][n] - posL[1]) * ddi[1]);
+            ii[p][2][n] = (int)roundf((pos1z[p][n] - posL[2]) * ddi[2]);
+            offset[p][0][n] = (pos1x[p][n] - posL[0]) * ddi[0] - (float)(ii[p][0][n]);
+            offset[p][1][n] = (pos1x[p][n] - posL[0]) * ddi[1] - (float)(ii[p][1][n]);
+            offset[p][2][n] = (pos1x[p][n] - posL[0]) * ddi[2] - (float)(ii[p][2][n]);
         }
     }
 #pragma omp barrier
@@ -106,9 +109,6 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
             v[p][0][n] = (pos1x[p][n] - pos0x[p][n]) * dti[p];
             v[p][1][n] = (pos1y[p][n] - pos0y[p][n]) * dti[p];
             v[p][2][n] = (pos1z[p][n] - pos0z[p][n]) * dti[p];
-            offset[p][0][n] = pos1x[p][n] * ddi[0] - (float)((int)ii[p][0][n] - n_space_divx / 2 + 1);
-            offset[p][1][n] = pos1y[p][n] * ddi[1] - (float)((int)ii[p][1][n] - n_space_divy / 2 + 1);
-            offset[p][2][n] = pos1z[p][n] * ddi[2] - (float)((int)ii[p][2][n] - n_space_divz / 2 + 1);
         }
 
         // #pragma omp parallel for simd num_threads(nthreads) reduction (+: KEtot[0] ,nt[0],KEtot[1] ,nt[1] )
@@ -151,13 +151,12 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
     }
 
 #pragma omp barrier
-
-
-    // #pragma omp parallel for
-    for (int p = 0; p < 2; p++)
+#pragma omp parallel num_threads(2)
     {
+        int p = omp_get_thread_num();
         smoothscalarfield(np[p], np_center[p]);
     }
+#pragma omp barrier
     // calculate center of current density field
     for (int p = 0; p < 2; p++)
         for (int c1 = 0; c1 < 3; c1++)
