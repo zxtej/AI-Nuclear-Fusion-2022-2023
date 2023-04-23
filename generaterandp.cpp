@@ -47,13 +47,13 @@ void generate_rand_sphere(float a0, float pos0x[2][n_partd], float pos0y[2][n_pa
             for (int j = 0; j < n_space_divy; ++j)
                 for (int i = 0; i < n_space_divx; ++i)
                 {
-                    n++;
-                    pos0x[p][n] = i * a0;
+                    pos0x[p][n] = (float)i * a0;
                     pos0y[p][n] = j * a0;
                     pos0z[p][n] = k * a0;
                     pos1x[p][n] = i * a0;
                     pos1y[p][n] = j * a0;
                     pos1z[p][n] = k * a0;
+                    n++;
                 }
 #pragma omp parallel for
         for (int n = n_cells; n < n_partd; n++)
