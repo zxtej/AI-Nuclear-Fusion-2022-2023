@@ -151,28 +151,9 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
     }
 
 #pragma omp barrier
-// calculate center of charge field
-//   cout << "calculate center of charge field" << endl;
-#pragma omp parallel num_threads(2)
-    {
-        int p = omp_get_thread_num();
-        for (int i = 0; i < n_space_divx; i += 1)
-            for (int j = 0; j < n_space_divy; j += 1)
-                for (int k = 0; k < n_space_divz; k += 1)
-                {
-                    // int n = i * n_space_divy * n_space_divz + j * n_space_divz + k;
-                    // Print out the center of charge  grid values
-                    //                  cout << np[p][k][j][i] << " ";
-                    np_center[p][k][j][i][0] = (np_center[p][k][j][i][0] / (np[p][k][j][i] + 1.0e-5f) + (float)i) / (float)n_space_divx - 0.5f;
-                    np_center[p][k][j][i][1] = (np_center[p][k][j][i][1] / (np[p][k][j][i] + 1.0e-5f) + (float)j) / (float)n_space_divy - 0.5f;
-                    np_center[p][k][j][i][2] = (np_center[p][k][j][i][2] / (np[p][k][j][i] + 1.0e-5f) + (float)k) / (float)n_space_divz - 0.5f;
-                }
-        //      cout << endl;
-    }
 
-    // Print out the center of charge  grid values
-#pragma omp barrier
- //#pragma omp parallel for
+
+    // #pragma omp parallel for
     for (int p = 0; p < 2; p++)
     {
         smoothscalarfield(np[p], np_center[p]);

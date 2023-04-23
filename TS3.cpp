@@ -16,17 +16,12 @@ int main()
     // ios_base::sync_with_stdio(false);
 
     if (!std::filesystem::create_directory(outpath1))
-    {
-        cout << "Output dir: " << outpath1 << "\n";
         outpath = outpath1;
-    }
     else if (!std::filesystem::create_directory(outpath2))
-    {
-        cout << "Output dir: " << outpath2 << "\n";
         outpath = outpath2;
-    }
     else
         return (1);
+    cout << "Output dir: " << outpath << "\n";
 
     timer.mark(); // Yes, 3 time marks. The first is for the overall program dt
     timer.mark(); // The second is for compute_d_time
