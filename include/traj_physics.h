@@ -12,10 +12,10 @@ constexpr float Bmax0 = 1;
 constexpr float Emax0 = 1e10;
 
 constexpr float a0 = 10e-3; // typical dimensions of a cell
-constexpr float target_part = 1e14;
+constexpr float target_part = 1e13;
 
 // technical parameters
-constexpr int n_space = 64;                               // must be 2 to power of n
+constexpr int n_space = 32;                               // must be 2 to power of n
 constexpr int n_partd = n_space * n_space * n_space * 64; // must be 2 to power of n
 constexpr int n_parte = n_partd;
 

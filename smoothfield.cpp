@@ -17,9 +17,9 @@ void smoothscalarfield(float f[n_space_divz][n_space_divy][n_space_divx],
                 fc[k][j][i][1] = (fc[k][j][i][1] / (f[k][j][i] + 1.0e-5f));
                 fc[k][j][i][2] = (fc[k][j][i][2] / (f[k][j][i] + 1.0e-5f));
                 if (fc[k][j][i][0] > 0.5)
-                    cout << fc[k][j][i][0] <<" ";
+                    cout << fc[k][j][i][0] << " ";
                 if (fc[k][j][i][0] < -0.5)
-                    cout << fc[k][j][i][0] <<" " <<f[k][j][i] <<" " ;
+                    cout << fc[k][j][i][0] << " " << f[k][j][i] << " ";
             }
     // calculate the 8 coefficients out of 27 and their indices
     /* center is [0][0][0] [dk][dj][di]so [-1][-1][-1],[-1][-1][0],[-1][-1][1] ... dk*n_space_divx*n_space_divx+dj*n_space_divx+di */
@@ -32,7 +32,7 @@ void smoothscalarfield(float f[n_space_divz][n_space_divy][n_space_divx],
         for (int j0 = 1; j0 < (n_space_divy - 1); ++j0)
             for (int i0 = 1; i0 < (n_space_divx - 1); ++i0)
             {
-                sw = ((int)(fc[k0][j0][i0][2] < 0.0f) << 2) + ((int)(fc[k0][j0][i0][1] < 0.0f) << 1) + (int)(fc[k0][j0][i0][0] < 0.0f);
+                sw = ((int)(fc[k0][j0][i0][2] > 0.0f) << 2) + ((int)(fc[k0][j0][i0][1] > 0.0f) << 1) + (int)(fc[k0][j0][i0][0] > 0.0f);
                 //              cout << (fc[k0][j0][i0][2] < 0.0f) << (fc[k0][j0][i0][1] < 0.0f) << (fc[k0][j0][i0][0] < 0.0f) << endl;
                 switch (sw)
                 {
@@ -142,8 +142,9 @@ void smoothscalarfield(float f[n_space_divz][n_space_divy][n_space_divx],
         for (int j = 0; j < n_space_divy; j += 1)
             for (int i = 0; i < n_space_divx; i += 1)
             {
-                //             f[k][j][i] = ftemp[k][j][i];
+                f[k][j][i] = ftemp[k][j][i];
             }
+  _aligned_free(ftemp);  
 }
 
 void smoothscalarfieldfft(float f[n_space_divz][n_space_divy][n_space_divx],

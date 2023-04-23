@@ -21,24 +21,24 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
     static const float dti[2] = {1.f / dt[0], 1.f / dt[1]};
 
     // cell indices for each particle [2][3][n_parte]
-    auto *ii = static_cast<unsigned int(*)[3][n_parte]>(_aligned_malloc(2 * 3 * n_parte * sizeof(unsigned int), alignment));
+    static auto *ii = static_cast<unsigned int(*)[3][n_parte]>(_aligned_malloc(2 * 3 * n_parte * sizeof(unsigned int), alignment));
     // particle velocity array [2][3][n_parte]
     static auto *v = static_cast<float(*)[3][n_parte]>(_aligned_malloc(2 * 3 * n_parte * sizeof(float), alignment));
     // particle offsets array [2][3][n_parte]
     static auto *offset = static_cast<float(*)[3][n_parte]>(_aligned_malloc(2 * 3 * n_parte * sizeof(float), alignment));
 
     // center of charge field arrays [2-particle type][3 pos][z][y][x]
-    auto *np_center = static_cast<float(*)[n_space_divz][n_space_divy][n_space_divx][3]>(_aligned_malloc(2 * 3 * n_space_divz * n_space_divy * n_space_divx * sizeof(float), alignment));
+    static auto *np_center = static_cast<float(*)[n_space_divz][n_space_divy][n_space_divx][3]>(_aligned_malloc(2 * 3 * n_space_divz * n_space_divy * n_space_divx * sizeof(float), alignment));
     // center of current field arrays [2][3-pos][3-current component][z][y][x]
-    auto *jc_center = static_cast<float(*)[3][n_space_divz][n_space_divy][n_space_divx][3]>(_aligned_malloc(2 * 3 * 3 * n_space_divz * n_space_divy * n_space_divx * sizeof(float), alignment));
+    static auto *jc_center = static_cast<float(*)[3][n_space_divz][n_space_divy][n_space_divx][3]>(_aligned_malloc(2 * 3 * 3 * n_space_divz * n_space_divy * n_space_divx * sizeof(float), alignment));
     // set fields=0 in preparation// Could split into threads.
     fill(reinterpret_cast<float *>(currentj), reinterpret_cast<float *>(currentj) + n_cells * 2 * 3, 0.f);
     fill(reinterpret_cast<float *>(np), reinterpret_cast<float *>(np) + n_cells * 2, 0.f);
     fill(reinterpret_cast<float *>(jc_center), reinterpret_cast<float *>(jc_center) + n_cells * 2 * 3 * 3, 0.f);
     fill(reinterpret_cast<float *>(np_center), reinterpret_cast<float *>(np_center) + n_cells * 3 * 2, 0.f);
 
-    auto oblist = new unsigned int[2][n_parte]; // list of out of bound particles
-    auto iblist = new unsigned int[2][n_parte];
+    static auto oblist = new unsigned int[2][n_parte]; // list of out of bound particles
+    static auto iblist = new unsigned int[2][n_parte];
     int nob[2]; // number of particles out of bounds
     int nib[2]; // number of particles within bounds
 //   cout << "get_density_start\n";
@@ -93,7 +93,6 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
             q[p][n] = q[p][last];
             q[p][last] = 0;
         }
-
         //      cout << p << ", " << n_part[p] << endl;
         //        cout <<p <<"number of particles out of bounds " << nob[p]<<endl;
     }
@@ -151,6 +150,7 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
     }
 
 #pragma omp barrier
+    // for (int p = 0; p < 2; p++)
 #pragma omp parallel num_threads(2)
     {
         int p = omp_get_thread_num();

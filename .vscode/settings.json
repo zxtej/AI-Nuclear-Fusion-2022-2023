@@ -3,7 +3,8 @@
         "atomic": "cpp",
         "new": "cpp",
         "ostream": "cpp",
-        "iostream": "cpp"
+        "iostream": "cpp",
+        "charconv": "cpp"
     },
     "makefile.launchConfigurations": [
         {
