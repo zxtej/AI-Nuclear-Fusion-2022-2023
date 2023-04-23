@@ -53,8 +53,8 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
             ii[p][1][n] = (int)roundf((pos1y[p][n] - posL[1]) * ddi[1]);
             ii[p][2][n] = (int)roundf((pos1z[p][n] - posL[2]) * ddi[2]);
             offset[p][0][n] = (pos1x[p][n] - posL[0]) * ddi[0] - (float)(ii[p][0][n]);
-            offset[p][1][n] = (pos1x[p][n] - posL[0]) * ddi[1] - (float)(ii[p][1][n]);
-            offset[p][2][n] = (pos1x[p][n] - posL[0]) * ddi[2] - (float)(ii[p][2][n]);
+            offset[p][1][n] = (pos1y[p][n] - posL[1]) * ddi[1] - (float)(ii[p][1][n]);
+            offset[p][2][n] = (pos1z[p][n] - posL[2]) * ddi[2] - (float)(ii[p][2][n]);
         }
     }
 #pragma omp barrier
