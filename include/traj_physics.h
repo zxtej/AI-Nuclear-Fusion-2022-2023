@@ -1,8 +1,8 @@
 #define RamDisk // whether to use RamDisk if no ramdisk files will be in temp directory
 #define maxcells 32
 #define cldevice 1
-#define sphere //do hot spot  problem
-//#define cylinder //do hot rod problem
+#define sphere // do hot spot  problem
+// #define cylinder //do hot rod problem
 #define Temp_e 1e7 // in Kelvin
 #define Temp_d 1e7 // in Kelvin
 
@@ -15,7 +15,7 @@ constexpr float a0 = 20e-3; // typical dimensions of a cell
 constexpr float target_part = 1e14;
 
 // technical parameters
-constexpr int n_space = 128;                              // must be 2 to power of n
+constexpr int n_space = 32;                               // must be 2 to power of n
 constexpr int n_partd = n_space * n_space * n_space * 64; // must be 2 to power of n
 constexpr int n_parte = n_partd;
 
@@ -25,9 +25,8 @@ constexpr int n_output_part = (n_partd > 8192) ? 8192 : n_partd; // maximum numb
 // const int nprtd=floor(n_partd/n_output_part);
 
 constexpr int ndatapoints = 9; // total number of time steps to calculate
-constexpr int nc = 10;           // number of times to calculate E and B between printouts
-constexpr int md_me = 60;        // ratio of electron speed/deuteron speed at the same KE. Used to calculate electron motion more often than deuteron motion
-
+constexpr int nc = 10;         // number of times to calculate E and B between printouts
+constexpr int md_me = 60;      // ratio of electron speed/deuteron speed at the same KE. Used to calculate electron motion more often than deuteron motion
 
 #define Hist_n 1024
 #define Hist_max Temp_e / 11600 * 60 // in eV Kelvin to eV is divide by 11600
@@ -43,8 +42,6 @@ constexpr int md_me = 60;        // ratio of electron speed/deuteron speed at th
 // #define printV //print out V
 #define printB // print out B field
 #define printE // print out E field
-
-
 
 constexpr float r_part_spart = target_part / n_partd; // 1e12 / n_partd; // ratio of particles per tracked "super" particle
 // ie. the field of N particles will be multiplied by (1e12/N), as if there were 1e12 particles
@@ -83,4 +80,4 @@ constexpr float u0 = 4e-7 * pi;
 
 constexpr int ncalc0[2] = {md_me, 1};
 constexpr int qs[2] = {-1, 1}; // Sign of charge
-constexpr    int mp[2] = {1, 1835 * 2};
+constexpr int mp[2] = {1, 1835 * 2};
