@@ -41,18 +41,18 @@ void Log::close(){
 
 void log_headers()
 {
-    logger.write("time_large");
-    logger.write("time_small");
-    logger.write("dtchanged");
-    logger.write("ncalc_ele");
-    logger.write("ncalc_deut");
+    logger.write("t_large");
+    logger.write("t_small");
+    logger.write("dt_ch");
+    logger.write("nc_ele");
+    logger.write("nc_deut");
     logger.write("dt_ele");
     logger.write("dt_deut");
     logger.write("t_sim");
     logger.write("ne");
     logger.write("ni");
-    logger.write("KEtot_ele");
-    logger.write("KEtot_deut");
+    logger.write("KEt_e");
+    logger.write("KEt_d");
     logger.write("Ele_pot");
     logger.write("Mag_pot");
     logger.write("E_tot");

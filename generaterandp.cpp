@@ -42,21 +42,30 @@ void generate_rand_sphere(float a0, float pos0x[2][n_partd], float pos0y[2][n_pa
 
     for (int p = 0; p < 2; p++)
     {
-        int n = 0;
-        for (int k = 0; k < n_space_divz; ++k)
-            for (int j = 0; j < n_space_divy; ++j)
-                for (int i = 0; i < n_space_divx; ++i)
-                {
-                    pos0x[p][n] = (float)(i - n_space_divx) * a0;
-                    pos0y[p][n] = (float)(j - n_space_divy) * a0;
-                    pos0z[p][n] = (float)(k - n_space_divz) * a0;
-                    pos1x[p][n] = pos0x[p][n];
-                    pos1y[p][n] = pos0y[p][n];
-                    pos1z[p][n] = pos0z[p][n];
-                    n++;
-                }
+        int na = 0;
+        for (int n = 0; n < 5; ++n) // set number of particles per cell in background
+        {
+            for (int k = 1; k < n_space_divz - 1; ++k)
+            {
+                for (int j = 1; j < n_space_divy - 1; ++j)
+                    for (int i = 1; i < n_space_divx - 1; ++i)
+                    {
+                        pos0x[p][na] = ((float)(i - n_space_divx / 2) + (float)rand() / RAND_MAX) * a0;
+                        pos0y[p][na] = ((float)(j - n_space_divy / 2) + (float)rand() / RAND_MAX) * a0;
+                        pos0z[p][na] = ((float)(k - n_space_divz / 2) + (float)rand() / RAND_MAX) * a0;
+                        pos1x[p][na] = pos0x[p][na];
+                        pos1y[p][na] = pos0y[p][na];
+                        pos1z[p][na] = pos0z[p][na];
+                        q[p][na] = qs[p];
+                        m[p][na] = mp[p];
+                        na++;
+                    }
+                //         cout << pos1z[p][na - 1] << " ";
+            }
+        }
+
 #pragma omp parallel for
-        for (int n = n_cells; n < n_partd; n++)
+        for (int n = na; n < n_partd; n++)
         {
             float r = r0 * pow(gsl_ran_flat(rng, 0, 1), 0.3333333333);
             double x, y, z;
@@ -87,7 +96,7 @@ void generate_rand_cylinder(float a0, float pos0x[2][n_partd], float pos0y[2][n_
     // initial bulk electron, ion velocity
     float v0[2][3] = {{0, 0, -1e7 /*1e6*/}, {0, 0, 0}};
 
-    float r0 = a0; // if sphere this is the radius
+    float r0 = a0; // the radius
     float area = pi * r0 * r0;
     float volume = pi * r0 * r0 * n_space * a0;
     // float volume=((posHp[0]-posLp[0])*(posHp[1]-posLp[1])*(posHp[2]-posLp[2]))); //cube
@@ -126,20 +135,22 @@ void generate_rand_cylinder(float a0, float pos0x[2][n_partd], float pos0y[2][n_
 
     for (int p = 0; p < 2; p++)
     {
-        int n = 0;
-        for (int k = 0; k < n_space_divz; ++k)
-            for (int j = 0; j < n_space_divy; ++j)
-                for (int i = 0; i < n_space_divx; ++i)
+        int na = 0;
+        for (int k = 1; k < n_space_divz - 1; ++k)
+            for (int j = 1; j < n_space_divy - 1; ++j)
+                for (int i = 1; i < n_space_divx - 1; ++i)
                 {
-                    pos0x[p][n] = (float)(i - n_space_divx/2) * a0;
-                    pos0y[p][n] = (float)(j - n_space_divy)/2 * a0;
-                    pos0z[p][n] = (float)(k - n_space_divz)/2 * a0;
-                    pos1x[p][n] = pos0x[p][n];
-                    pos1y[p][n] = pos0y[p][n];
-                    pos1z[p][n] = pos0z[p][n];
-                    n++;
+                    pos0x[p][na] = (float)(i - n_space_divx / 2) * a0;
+                    pos0y[p][na] = (float)(j - n_space_divy / 2) * a0;
+                    pos0z[p][na] = (float)(k - n_space_divz / 2) * a0;
+                    pos1x[p][na] = pos0x[p][na];
+                    pos1y[p][na] = pos0y[p][na];
+                    pos1z[p][na] = pos0z[p][na];
+                    q[p][na] = qs[p];
+                    m[p][na] = mp[p];
+                    na++;
                 }
-        for (int n = n_cells; n < n_partd; n++)
+        for (int n = na; n < n_partd; n++)
         {
             float r = r0 * pow(gsl_ran_flat(rng, 0, 1), 0.5);
             double x, y, z;
