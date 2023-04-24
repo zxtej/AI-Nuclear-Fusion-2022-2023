@@ -6,6 +6,8 @@
 #define Temp_e 1e7 // in Kelvin
 #define Temp_d 1e7 // in Kelvin
 
+constexpr float r_visc = -0.1f; // The viscosity of the simulation space. Positive values will result in viscous force accelerating particles.
+
 // The maximum expected E and B fields. If fields go beyond this, the the time step, cell size etc will be wrong. Should adjust and recalculate.
 //  maximum expected magnetic field
 constexpr float Bmax0 = 0.1;

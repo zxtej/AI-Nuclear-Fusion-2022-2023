@@ -35,7 +35,7 @@ void tnp(float *Ea, float *Ba,
 
    // create queue to which we will push commands for the device.
    static cl::CommandQueue queue(context_g, default_device_g);
-   cl::Kernel kernel_add = cl::Kernel(program_g, "tnp_k_implicit"); // select the kernel program to run
+   cl::Kernel kernel_add = cl::Kernel(program_g, "tnp_k"); // select the kernel program to run
    // write input arrays to the device
    if(fastIO){//is mapping required? // Yes we might need to map because OpenCL does not guarantee that the data will be shared, alternatively use SVM
    //auto * mapped_buffer_C = (float *)queue.enqueueMapBuffer(buffer_C, CL_TRUE, CL_MAP_WRITE, 0, sizeof(float) * n); queue.enqueueUnmapMemObject(buffer_C, mapped_buffer_C);

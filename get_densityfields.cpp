@@ -116,15 +116,14 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
             v[p][1][n] = (pos1y[p][n] - pos0y[p][n]) * dti[p];
             v[p][2][n] = (pos1z[p][n] - pos0z[p][n]) * dti[p];
         }
-
+#pragma omp barrier
         // #pragma omp parallel for simd num_threads(nthreads) reduction (+: KEtot[0] ,nt[0],KEtot[1] ,nt[1] )
         for (int n = 0; n < n_part[p]; ++n)
         {
             KEtot[p] += v[p][0][n] * v[p][0][n] + v[p][1][n] * v[p][1][n] + v[p][2][n] * v[p][2][n];
             nt[p] += q[p][n];
         }
-        KEtot[p] *= 0.5 * mp[p] / (e_charge_mass)*r_part_spart; // as if these particles were actually samples of the greater thing
-#pragma omp barrier
+        KEtot[p] *= 0.5 * mp[p] / e_charge_mass * r_part_spart; // as if these particles were actually samples of the greater thing
 #pragma omp parallel for simd num_threads(nthreads)
         for (int n = 0; n < n_part[p]; ++n)
         {
@@ -132,7 +131,7 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
             v[p][1][n] *= q[p][n];
             v[p][2][n] *= q[p][n];
         }
-
+#pragma omp barrier
         for (int n = 0; n < n_part[p]; ++n)
         {
             unsigned int i = ii[p][0][n], j = ii[p][1][n], k = ii[p][2][n];

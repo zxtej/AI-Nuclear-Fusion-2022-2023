@@ -31,6 +31,7 @@ void cl_set_build_options(float posL[3], float posH[3], float dd[3])
     add_build_option("NX", n_space_divx);
     add_build_option("NY", n_space_divy);
     add_build_option("NZ", n_space_divz);
+    add_build_option("R_VISC", r_visc);
     // add_build_option("NC", n_cells);
 }
 // void cl_start(cl::Context &context1, cl::Device &default_device1, cl::Program &program1)
