@@ -56,15 +56,20 @@ https://www-user.tu-chemnitz.de/~potts/nfft/installation.php
 
 
 
-
-- to get more performance, you might want to recompile the libraries used. for example to install fftw3 recompiled with OMP enabled:
+- to get more performance, you might want to recompile the libraries used. for example to install FFTW3 recompiled with OMP enabled (if not on Windows):
  > wget https://www.fftw.org/fftw-3.3.10.tar.gz
-
  > tar xvzf fftw-3.3.10.tar.gz
-
-> cd fftw-3.3.10/
-
-> ./configure --enable-threads --enable-openmp --enable-avx --enable-avx2 --enable-avx512 --enable-avx-128-fma --enable-float --with-our-malloc --enable-sse2
-
-> make
+ > cd fftw-3.3.10/
+ > ./configure --enable-threads --enable-openmp --enable-avx --enable-avx2 --enable-avx512 --enable-avx-128-fma --enable-float --with-our-malloc --enable-sse2
+ > make
  > make install
+
+    For Windows, we have to compile FFTW into one single shared library:
+ > ./configure --enable-threads --enable-sse2 --enable-avx --enable-avx2 --enable-avx-128-fma --with-our-malloc --enable-float --enable-shared --disable-static --with-combined-threads
+
+- Next, we can also recompile NFFT to make use of multithreading:
+> cd ../nfft-3.5.3/
+> ./configure --enable-float --enable-openmp
+> make
+> make install
+- Resulting library can be linked using -lnfft3f_threads

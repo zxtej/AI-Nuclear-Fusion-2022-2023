@@ -3,3 +3,4 @@ obj/*
 obj_debug/*
 *.csv
 *.exe
+.vscode/c_cpp_properties.json

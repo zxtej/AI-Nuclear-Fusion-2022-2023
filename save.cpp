@@ -4,7 +4,7 @@ void save_files(int i_time, unsigned int n_space_div[3], float posL[3], float dd
                 float np[2][n_space_divz][n_space_divy][n_space_divx], float currentj[2][3][n_space_divz][n_space_divy][n_space_divx],
                 float V[n_space_divz][n_space_divy][n_space_divx],
                 float E[3][n_space_divz][n_space_divy][n_space_divx], float B[3][n_space_divz][n_space_divy][n_space_divx],
-                float KE[2][n_output_part], float posp[2][n_output_part][3])
+                float KE[2][n_output_part], float posp[2][n_output_part][3], float temperature[4][n_space_divz][n_space_divy][n_space_divx])
 {
 #ifdef printDensity
   save_vti_c("Ne", i_time, n_space_div, posL, dd, n_cells, 1, t, &np[0], "Float32", sizeof(float));
@@ -22,6 +22,10 @@ void save_files(int i_time, unsigned int n_space_div[3], float posL[3], float dd
 #ifdef printParticles
   save_vtp("e", i_time, n_output_part, 0, t, KE, posp);
   save_vtp("d", i_time, n_output_part, 1, t, KE, posp);
+#endif
+#ifdef printTemperature
+save_vti_c("Temp_e", i_time, n_space_div, posL, dd, n_cells, 1, t, &temperature[0], "Float32", sizeof(float));
+save_vti_c("Temp_d", i_time, n_space_div, posL, dd, n_cells, 1, t, &temperature[1], "Float32", sizeof(float));
 #endif
 }
 void save_hist(int i_time, double t, int npart, float dt[2], float pos0x[2][n_partd], float pos0y[2][n_partd], float pos0z[2][n_partd], float pos1x[2][n_partd], float pos1y[2][n_partd], float pos1z[2][n_partd],int n_part[3])

@@ -66,12 +66,14 @@ int main()
 
     auto *np = static_cast<float(*)[n_space_divz][n_space_divy][n_space_divx]>(_aligned_malloc(2 * n_space_divz * n_space_divy * n_space_divx * sizeof(float), alignment));
     auto *npt = static_cast<float(*)[n_space_divy][n_space_divx]>(_aligned_malloc(n_space_divz * n_space_divy * n_space_divx * sizeof(float), alignment));
+    auto *dp = static_cast<float(*)[n_space_divy][n_space_divx]>(_aligned_malloc(n_space_divz * n_space_divy * n_space_divx * sizeof(float), alignment));
     int nt[2] = {0, 0};
     float KEtot[2] = {0, 0};
     auto *currentj = static_cast<float(*)[3][n_space_divz][n_space_divy][n_space_divx]>(_aligned_malloc(2 * 3 * n_space_divz * n_space_divy * n_space_divx * sizeof(float), alignment));
+    auto *dj = static_cast<float(*)[n_space_divz][n_space_divy][n_space_divx]>(_aligned_malloc(3 * n_space_divz * n_space_divy * n_space_divx * sizeof(float), alignment));
     auto *jc = static_cast<float(*)[n_space_divz][n_space_divy][n_space_divx]>(_aligned_malloc(3 * n_space_divz * n_space_divy * n_space_divx * sizeof(float), alignment));
 
-    //    auto *jc = new float[3][n_space_divz][n_space_divy][n_space_divx];
+    auto *temperature = static_cast<float(*)[n_space_divz][n_space_divy][n_space_divx]>(_aligned_malloc(4 * n_space_divz * n_space_divy * n_space_divx * sizeof(float), alignment));
     float U[2] = {0, 0};
 
     ofstream E_file, B_file;
@@ -108,6 +110,7 @@ int main()
     generateField(Ee, Be);
 
     cout << "Set initial random positions: " << timer.replace() << "s\n";
+    float timestep_dt = dt[0] * ncalc[0];
     float posL[3], posH[3], posL2[3], dd[3];
     // set spacing between cells
     for (int c = 0; c < 3; c++)
@@ -126,6 +129,7 @@ int main()
     unsigned int ci[2] = {n_partd, 0};
     float cf[2] = {0, 0};
     fftwf_init_threads();
+    fftwf_plan_with_nthreads(omp_get_max_threads());
     cl_set_build_options(posL, posH, dd);
     cl_start();
 
@@ -172,10 +176,16 @@ int main()
         E_file.close();
     }
 
+    get_EBV_plans(dd); // Initialize the fft properties
+    cout << "Initialize OpenCL and FFTW: " << timer.replace() << "s\n";
+
     int i_time = 0;
-    get_densityfields(currentj, np, npt, nt, KEtot, posL, posH, dd, pos1x, pos1y, pos1z, pos0x, pos0y, pos0z, q, dt, n_part, jc);
-    calcEBV(V, E, B, Ee, Be, npt, jc, dd, Emax, Bmax);
-    cout << "calc trilin constants\n";
+    get_densityfields(currentj, np, dp, npt, nt, KEtot, posL, posH, dd, pos1x, pos1y, pos1z, pos0x, pos0y, pos0z, q, dt, n_part, dj, jc);
+    memset(dp, 0, sizeof(float) * n_cells);
+    memset(dj, 0, sizeof(float) * n_cells * 3); // Invalidate dp/dt, dJ/dt
+
+    calcEBV(V, E, B, Ee, Be, dp, npt, dj, jc, dd, Emax, Bmax, timestep_dt);
+
     calc_trilin_constants(E, Ea, dd, posL);
     calc_trilin_constants(B, Ba, dd, posL);
 #ifdef Uon_
@@ -187,7 +197,8 @@ int main()
          << ", ne = " << nt[0] << ", ni = " << nt[1];
     cout << "\nKEtot e = " << KEtot[0] << ", KEtot i = " << KEtot[1] << ", Eele = " << U[0] << ", Emag = " << U[1] << ", Etot = " << KEtot[0] + KEtot[1] + U[0] + U[1] << " eV\n";
     sel_part_print(n_part, pos1x, pos1y, pos1z, pos0x, pos0y, pos0z, posp, KE, m, dt);
-    save_files(i_time, n_space_div, posL, dd, t, np, currentj, V, E, B, KE, posp);
+    get_Temp_field(temperature, pos1x, pos1y, pos1z, pos0x, pos0y, pos0z, n_part, posL, dd, dt);
+    save_files(i_time, n_space_div, posL, dd, t, np, currentj, V, E, B, KE, posp, temperature);
     cout << "print data: " << timer.elapsed() << "s (no. of electron time steps calculated: " << 0 << ")\n";
 
     // Write everything to log
@@ -228,14 +239,14 @@ int main()
 
             //  find number of particle and current density fields
             timer.mark();
-            get_densityfields(currentj, np, npt, nt, KEtot, posL, posH, dd, pos1x, pos1y, pos1z, pos0x, pos0y, pos0z, q, dt, n_part, jc);
+            get_densityfields(currentj, np, dp, npt, nt, KEtot, posL, posH, dd, pos1x, pos1y, pos1z, pos0x, pos0y, pos0z, q, dt, n_part, dj, jc);
             cout << "density: " << timer.elapsed() << "s, ";
             save_hist(i_time, t, n_partd, dt, pos0x, pos0y, pos0z, pos1x, pos1y, pos1z, n_part);
             // find E field must work out every i,j,k depends on charge in every other cell
             timer.mark();
             // set externally applied fields this is inside time loop so we can set time varying E and B field
             // calcEeBe(Ee,Be,t);
-            int cdt = calcEBV(V, E, B, Ee, Be, npt, jc, dd, Emax, Bmax);
+            int cdt = calcEBV(V, E, B, Ee, Be, dp, npt, dj, jc, dd, Emax, Bmax, timestep_dt);
             /* change time step if E or B too big*/
             if (cdt)
             {
@@ -278,7 +289,8 @@ int main()
         // print out all files for paraview
         timer.mark();
         sel_part_print(n_part, pos1x, pos1y, pos1z, pos0x, pos0y, pos0z, posp, KE, m, dt);
-        save_files(i_time, n_space_div, posL, dd, t, np, currentj, V, E, B, KE, posp);
+        get_Temp_field(temperature, pos1x, pos1y, pos1z, pos0x, pos0y, pos0z, n_part, posL, dd, dt);
+        save_files(i_time, n_space_div, posL, dd, t, np, currentj, V, E, B, KE, posp, temperature);
         cout << "print data: " << timer.elapsed() << "s (no. of electron time steps calculated: " << total_ncalc[0] << ")\n";
     }
     cout << "Overall execution time: " << timer.elapsed() << "s";

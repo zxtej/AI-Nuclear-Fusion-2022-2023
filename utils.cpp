@@ -1,11 +1,10 @@
 #include "include/traj.h"
 
 void id_to_cell(int id, int*x, int*y, int*z){
-    constexpr size_t xy = n_space_divx * n_space_divy;
-    *z = id / xy;
-    id = id % xy;
-    *y = id / n_space_divx;
     *x = id % n_space_divx;
+    id = id / n_space_divx;
+    *y = id % n_space_divy;
+    *z = id / n_space_divy;
 }
 
 void Time::mark(){

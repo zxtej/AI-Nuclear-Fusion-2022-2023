@@ -1,7 +1,7 @@
 #define RamDisk // whether to use RamDisk if no ramdisk files will be in temp directory
 #define maxcells 32
 #define cldevice 0
-#define sphere // do hot spot  problem
+#define sphere // do hot spot problem
 // #define cylinder //do hot rod problem
 #define Temp_e 1e7 // in Kelvin
 #define Temp_d 1e7 // in Kelvin
@@ -42,21 +42,11 @@ constexpr int md_me = 60;      // ratio of electron speed/deuteron speed at the 
 // #define printV //print out V
 #define printB // print out B field
 #define printE // print out E field
+#define printTemperature // print out Temp field
 
 constexpr float r_part_spart = target_part / n_partd; // 1e12 / n_partd; // ratio of particles per tracked "super" particle
 // ie. the field of N particles will be multiplied by (1e12/N), as if there were 1e12 particles
 
-#define trilinon_
-#define Uon_  // whether to calculate the electric (V) potential and potential energy (U). Needs Eon to be enabled.
-#define Eon_  // whether to calculate the electric (E) field
-#define Bon_  // whether to calculate the magnetic (B) field
-#define EFon_ // whether to apply electric force
-#define BFon_ // whether to apply magnetic force
-#define printDensity
-#define printParticles
-// #define printV //print out V
-#define printB // print out B field
-#define printE // print out E field
 // #define FileIn //whether to load from input file (unused)
 
 constexpr int n_space_divx = n_space;
@@ -68,6 +58,7 @@ constexpr int n_space_divz2 = n_space_divz * 2;
 constexpr int n_cells = n_space_divx * n_space_divy * n_space_divz;
 constexpr int n_cells8 = n_cells * 8;
 // physical "constants"
+constexpr float c_light = 299792458.f;
 constexpr float kb = 1.38064852e-23;       // m^2kss^-2K-1
 constexpr float e_charge = 1.60217662e-19; // C
 constexpr float ev_to_j = e_charge;

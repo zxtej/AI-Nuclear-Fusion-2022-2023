@@ -4,7 +4,8 @@ void smoothscalarfield(float f[n_space_divz][n_space_divy][n_space_divx],
                        float fc[n_space_divz][n_space_divy][n_space_divx][3])
 {
     //   cout << "smoothfield" << endl;
-    auto *ftemp = static_cast<float(*)[n_space_divy][n_space_divx]>(_aligned_malloc(n_space_divz * n_space_divy * n_space_divx * sizeof(float), alignment));
+    auto stuff = _aligned_malloc(n_cells * sizeof(float), alignment);
+    auto *ftemp = static_cast<float(*)[n_space_divy][n_space_divx]>(stuff);
     //  auto *kspread = static_cast<float(*)[3][3]>(_aligned_malloc(3 * 3 * 3 * sizeof(float), alignment));
     fill(reinterpret_cast<float *>(ftemp), reinterpret_cast<float *>(ftemp) + n_cells, 0.f);
     // calculate center of charge field as offsets (-0.5 to 0.5) from cell center
@@ -158,7 +159,7 @@ void smoothscalarfield(float f[n_space_divz][n_space_divy][n_space_divx],
             {
                 f[k][j][i] = ftemp[k][j][i];
             }
-    _aligned_free(ftemp);
+    _aligned_free(stuff);
 }
 
 void smoothscalarfieldfft(float f[n_space_divz][n_space_divy][n_space_divx],

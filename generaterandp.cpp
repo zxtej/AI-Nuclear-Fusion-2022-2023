@@ -81,7 +81,7 @@ void generate_rand_sphere(float a0, float pos0x[2][n_partd], float pos0y[2][n_pa
             //         nt[p] += q[p][n];
         }
     }
-#pragma barrier
+#pragma omp barrier
     gsl_rng_free(rng); // dealloc the rng
 }
 void generate_rand_cylinder(float a0, float pos0x[2][n_partd], float pos0y[2][n_partd], float pos0z[2][n_partd],

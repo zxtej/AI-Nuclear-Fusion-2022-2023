@@ -3,11 +3,13 @@
 
 void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_divx],
                        float np[2][n_space_divz][n_space_divy][n_space_divx],
+                       float dp[n_space_divz][n_space_divy][n_space_divx],
                        float npt[n_space_divz][n_space_divy][n_space_divx],
                        int nt[2], float KEtot[2], float posL[3], float posH[3], float dd[3],
                        float pos1x[2][n_partd], float pos1y[2][n_partd], float pos1z[2][n_partd],
                        float pos0x[2][n_partd], float pos0y[2][n_partd], float pos0z[2][n_partd],
                        int q[2][n_partd], float dt[2], int n_part[3],
+                       float dj[3][n_space_divz][n_space_divy][n_space_divx],
                        float jc[3][n_space_divz][n_space_divy][n_space_divx])
 {
     // find number of particle and current density fields
@@ -18,7 +20,8 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
     KEtot[1] = 0;
     // set limits beyond which particle is considered as "lost"
     static const float ddi[3] = {1.f / dd[0], 1.f / dd[1], 1.f / dd[2]}; // precalculate reciprocals
-    static const float dti[2] = {1.f / dt[0], 1.f / dt[1]};
+    static float dti[2] = {1.f / dt[0], 1.f / dt[1]};
+    dti[0] = 1.f / dt[0], dti[1] = 1.f / dt[1]; // dt might change, so recalculate it
 
     // cell indices for each particle [2][3][n_parte]
     static auto *ii = static_cast<unsigned int(*)[3][n_parte]>(_aligned_malloc(2 * 3 * n_parte * sizeof(unsigned int), alignment));
@@ -49,12 +52,15 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
 #pragma omp parallel for simd num_threads(nthreads)
         for (unsigned int n = 0; n < n_part[p]; ++n) // get cell indices (x,y,z) a particle belongs to
         {
-            ii[p][0][n] = (int)roundf((pos1x[p][n] - posL[0]) * ddi[0]);
-            ii[p][1][n] = (int)roundf((pos1y[p][n] - posL[1]) * ddi[1]);
-            ii[p][2][n] = (int)roundf((pos1z[p][n] - posL[2]) * ddi[2]);
-            offset[p][0][n] = (pos1x[p][n] - posL[0]) * ddi[0] - (float)(ii[p][0][n]);
-            offset[p][1][n] = (pos1y[p][n] - posL[1]) * ddi[1] - (float)(ii[p][1][n]);
-            offset[p][2][n] = (pos1z[p][n] - posL[2]) * ddi[2] - (float)(ii[p][2][n]);
+            float x = (pos1x[p][n] - posL[0]) * ddi[0];
+            float y = (pos1y[p][n] - posL[1]) * ddi[1];
+            float z = (pos1z[p][n] - posL[2]) * ddi[2];
+            ii[p][0][n] = (unsigned int)roundf(x);
+            ii[p][1][n] = (unsigned int)roundf(y);
+            ii[p][2][n] = (unsigned int)roundf(z);
+            offset[p][0][n] = x - roundf(x);
+            offset[p][1][n] = y - roundf(y);
+            offset[p][2][n] = z - roundf(z);
         }
     }
 #pragma omp barrier
@@ -67,33 +73,34 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
         {
             if ((ii[p][0][n] > (n_space_divx - 2)) || (ii[p][1][n] > (n_space_divy - 2)) || (ii[p][2][n] > (n_space_divz - 2)) || (ii[p][0][n] < 1) || (ii[p][1][n] < 1) || (ii[p][2][n] < 1))
             {
-                oblist[p][nob[p]] = n;
-                nob[p]++;
+                oblist[p][nob[p]++] = n;
             }
             else
             {
-                iblist[p][nob[p]] = n;
-                nib[p]++;
+                iblist[p][nib[p]++] = n;
             }
         }
+        n_part[p] -= nob[p];
         for (unsigned int n = 0; n < nob[p]; ++n)
         {
-            n_part[p]--;
-            nib[p]--;
-            int last = iblist[p][nib[p]];
-            pos0x[p][oblist[p][n]] = pos0x[p][last];
-            pos0y[p][oblist[p][n]] = pos0y[p][last];
-            pos0z[p][oblist[p][n]] = pos0z[p][last];
-            pos1x[p][oblist[p][n]] = pos1x[p][last];
-            pos1y[p][oblist[p][n]] = pos1y[p][last];
-            pos1z[p][oblist[p][n]] = pos1z[p][last];
-            ii[p][0][oblist[p][n]] = ii[p][0][last];
-            ii[p][1][oblist[p][n]] = ii[p][1][last];
-            ii[p][2][oblist[p][n]] = ii[p][2][last];
-            q[p][n] = q[p][last];
-            q[p][last] = 0;
+            if(nib[p] <= 0){ // no new particles to bring forward
+                q[p][oblist[p][n]] = 0;
+                continue;
+            }
+            int curr_ob = oblist[p][n], last_ib = iblist[p][--nib[p]];
+            pos0x[p][curr_ob] = pos0x[p][last_ib];
+            pos0y[p][curr_ob] = pos0y[p][last_ib];
+            pos0z[p][curr_ob] = pos0z[p][last_ib];
+            pos1x[p][curr_ob] = pos1x[p][last_ib];
+            pos1y[p][curr_ob] = pos1y[p][last_ib];
+            pos1z[p][curr_ob] = pos1z[p][last_ib];
+            ii[p][0][curr_ob] = ii[p][0][last_ib];
+            ii[p][1][curr_ob] = ii[p][1][last_ib];
+            ii[p][2][curr_ob] = ii[p][2][last_ib];
+            q[p][curr_ob] = q[p][last_ib];
+            q[p][last_ib] = 0;
         }
-        //      cout << p << ", " << n_part[p] << endl;
+        // cout << p << ", " << n_part[p] << endl;
 //        cout << p << "number of particles out of bounds " << nob[p] << endl;
     }
 #pragma omp barrier
@@ -166,15 +173,21 @@ void get_densityfields(float currentj[2][3][n_space_divz][n_space_divy][n_space_
                 {
                     (reinterpret_cast<float *>(jc_center[p][c1][c]))[i] /= (reinterpret_cast<float *>(currentj[p][c]))[i];
                 }
+    auto j0 = (float*)(currentj[0]), j1 = (float*)(currentj[1]), dj_1d = (float*)dj, jc_1d = (float*)jc;
 #pragma omp parallel for simd num_threads(nthreads)
     for (unsigned int i = 0; i < n_cells * 3; i++)
     {
-        (reinterpret_cast<float *>(jc))[i] = (reinterpret_cast<float *>(currentj[0]))[i] + (reinterpret_cast<float *>(currentj[1]))[i];
+        float sum = j0[i] + j1[i];
+        dj_1d[i] = sum - jc_1d[i];
+        jc_1d[i] = sum;
     }
+    auto npt_1d = (float*)npt, np0 = (float*)(np[0]), np1 = (float*)(np[1]), dp_1d = (float*)dp;
 #pragma omp parallel for simd num_threads(nthreads)
     for (unsigned int i = 0; i < n_cells; i++)
     {
-        (reinterpret_cast<float *>(npt))[i] = (reinterpret_cast<float *>(np[0]))[i] + (reinterpret_cast<float *>(np[1]))[i];
+        float sum = np0[i] + np1[i];
+        dp_1d[i] = sum - npt_1d[i];
+        npt_1d[i] = sum;
     }
 #pragma omp barrier
 }
